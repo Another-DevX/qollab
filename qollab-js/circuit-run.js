@@ -92,6 +92,55 @@
     return parts.join(" · ");
   }
 
+  /* Human labels for the injected noise channels. */
+  function channelLabel(ch) {
+    return ch === "x" ? "bit-flip X" : ch === "z" ? "phase-flip Z" : ch === "depol" ? "depolarizing" : String(ch == null ? "" : ch);
+  }
+  function bitsIn(counts) { var k = counts && Object.keys(counts)[0]; return k ? k.length : 0; }
+
+  /* A clear report for a noisy circuit run: the real backend result first, then
+     an optional analytical model estimate, kept visually distinct so the two
+     never get confused. Shared by every "run on a backend" card. */
+  function noisyReportHTML(res, opts) {
+    opts = opts || {}; res = res || {};
+    var ideal = res.ideal || {}, noisy = res.noisy || {};
+    var bits = bitsIn(ideal.counts) || bitsIn(noisy.counts);
+    var isLocal = res.mode === "local";
+    function hist(title, side, cls) {
+      return "<div><div class='crun-hist-head'><span>" + title + "</span>" +
+        "<span class='crun-pill" + (cls ? " " + cls : "") + "'>alarms in " + pct(side.detected) + " of shots</span></div>" +
+        barsHTML(side.counts, 4) + "</div>";
+    }
+    var html =
+      "<div class='crun-report'>" +
+        "<div class='crun-meta'><span class='crun-tag'>" + (isLocal ? "Local run" : "Backend run") + "</span>" +
+          "<span class='caption'>" + (res.shots != null ? res.shots + " shots · " : "") + esc(res.backend || (isLocal ? "local simulator" : "backend")) +
+            " · " + esc(channelLabel(res.channel)) + " @ p = " + res.p + "</span></div>" +
+        runLine(res) +
+        "<div class='crun-protect'><span class='crun-tag alt'>Protected</span><span>" + esc(res.protected || "") + "</span></div>" +
+        "<div class='crun-block'>" +
+          "<div class='crun-block-head'>" + (isLocal ? "What the simulation returned" : "What the backend returned") + "</div>" +
+          "<p class='caption'>Each bar is one outcome of the " + (bits ? bits + "-bit " : "") + "<b>stabilizer</b> register of the code: a 1 marks a check that read −1 (an alarm).</p>" +
+          "<div class='grid-two'>" + hist("Noise-free", ideal, "") + hist("With noise", noisy, "bad") + "</div>" +
+        "</div>";
+    if (opts.rows && opts.rows.length) {
+      html += "<div class='crun-block'>" +
+        "<div class='crun-block-head'>Model estimate <span class='crun-sub'>idealized · independent of the counts above</span></div>" +
+        "<table class='crun-table'><thead><tr><th>Scenario</th><th>Logical failure rate</th></tr></thead><tbody>" +
+        opts.rows.map(function (r, i) { return "<tr" + (i === opts.rows.length - 1 && opts.rows.length > 1 ? " class='good'" : "") + "><td>" + esc(r.label) + "</td><td>" + r.value + "</td></tr>"; }).join("") +
+        "</tbody></table>" +
+        "<p class='caption' style='margin-top:8px'>Analytical <em>code-capacity</em> estimate for the " + esc(channelLabel(res.channel)) + " channel at p = " + res.p +
+          (opts.factor && isFinite(opts.factor) ? ". Correction lowers the failure rate by ≈" + opts.factor.toFixed(1) + "×." : ".") +
+          " Not decoded from the counts above.</p>" +
+        "</div>";
+    }
+    if (res.citations && res.citations.length) {
+      html += "<details class='expand' style='margin-top:12px'><summary>Noise models &amp; references</summary><div>" +
+        res.citations.map(function (c) { return "<div class='caption' style='margin-top:4px'>" + esc(c) + "</div>"; }).join("") + "</div></details>";
+    }
+    return html + "</div>";
+  }
+
   /**
    * Mount a run card into `host`.
    *
@@ -259,19 +308,7 @@
       status.textContent = "Running on the Qollab backend…";
       runNoisy({ model: model, channel: state.channel, p: state.p, shots: opts.shots || 2048 }).then(function (res) {
         status.textContent = res.shots + " shots · " + res.channel + " @ p = " + res.p + (res.backend ? " · " + res.backend : "");
-        out.innerHTML =
-          "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> " + esc(res.protected) + "</p></div>" +
-          "<p class='caption' style='margin-top:8px'>Ran on the Qollab backend" + (res.backend ? " (" + esc(res.backend) + ")" : "") + " · " +
-            (res.mode === "backend" ? "device noise model" : "ideal circuit, noise injected classically") + ".</p>" +
-          "<div class='grid-two' style='margin-top:12px'>" +
-            "<div><div class='caption'>" + (res.mode === "backend" ? "Noise-free reference (Aer)" : "Noise-free circuit (Qollab)") + " · detected " + pct(res.ideal.detected) + "</div>" + barsHTML(res.ideal.counts, 4) + "</div>" +
-            "<div><div class='caption'>" + (res.mode === "backend" ? "Noisy circuit (device)" : "Noisy circuit (injected)") + " · detected " + pct(res.noisy.detected) + "</div>" + barsHTML(res.noisy.counts, 4) + "</div>" +
-          "</div>" +
-          (res.citations && res.citations.length
-            ? "<details class='expand' style='margin-top:12px'><summary>Noise models &amp; references</summary><div>" +
-                res.citations.map(function (c) { return "<div class='caption' style='margin-top:4px'>" + esc(c) + "</div>"; }).join("") +
-              "</div></details>"
-            : "");
+        out.innerHTML = noisyReportHTML(res);
         if (opts.onResult) opts.onResult(res, out);
       }).catch(function (err) {
         status.textContent = "";
@@ -296,5 +333,7 @@
     runLine: runLine,
     barsHTML: barsHTML,
     summaryLine: summaryLine,
+    channelLabel: channelLabel,
+    noisyReportHTML: noisyReportHTML,
   };
 })(typeof window !== "undefined" ? window : globalThis);

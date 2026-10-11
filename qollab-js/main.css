@@ -242,6 +242,27 @@
   .crun-count{font-size:12px; color:var(--faint); min-width:3ch; text-align:right}
   .crun-sum{margin-top:10px}
   .crun-note{margin-top:4px}
+  /* Noisy-run report: real backend result, then a separate model estimate */
+  .crun-report{margin-top:14px}
+  .crun-meta{display:flex; flex-wrap:wrap; align-items:baseline; gap:10px}
+  .crun-tag{font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.16em; color:var(--accent)}
+  .crun-tag.alt{color:var(--muted)}
+  .crun-protect{display:flex; align-items:baseline; gap:10px; margin-top:10px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:color-mix(in srgb, var(--surface-3) 45%, transparent)}
+  .crun-protect span:last-child{color:var(--ink)}
+  .crun-block{margin-top:18px; border-top:1px solid var(--line); padding-top:14px}
+  .crun-block-head{font-size:14px; font-weight:600; color:var(--ink)}
+  .crun-sub{font-family:var(--mono); font-size:.66rem; text-transform:uppercase; letter-spacing:.14em; color:var(--faint); font-weight:400; margin-left:6px}
+  .crun-block .caption{margin-top:6px}
+  .crun-hist-head{display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:8px; font-size:13px; font-weight:600; color:var(--ink)}
+  .crun-pill{font-family:var(--mono); font-size:.66rem; letter-spacing:.03em; padding:2px 8px; border-radius:999px; border:1px solid var(--line); color:var(--muted); background:color-mix(in srgb, var(--surface-3) 50%, transparent); font-weight:400}
+  .crun-pill.bad{border-color:color-mix(in srgb, var(--bad) 45%, var(--line)); color:var(--bad); background:color-mix(in srgb, var(--bad) 10%, transparent)}
+  .crun-table{width:100%; border-collapse:collapse; margin-top:10px}
+  .crun-table th,.crun-table td{text-align:left; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px}
+  .crun-table th{font-family:var(--mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.12em; color:var(--faint); font-weight:500}
+  .crun-table td:first-child{color:var(--muted)}
+  .crun-table th:last-child,.crun-table td:last-child{text-align:right; font-variant-numeric:tabular-nums}
+  .crun-table td:last-child{font-family:var(--mono); color:var(--ink)}
+  .crun-table tr.good td:last-child{color:var(--good)}
 
   /* ---------- "runs on a backend" badge ---------- */
   .hw-badge{display:inline-flex; align-items:center; gap:5px; font-family:var(--mono); font-size:.68rem;
