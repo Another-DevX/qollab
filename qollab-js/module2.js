@@ -1404,7 +1404,7 @@
             "<button class='chip" + (nl.correction ? " active" : "") + "' data-nlc='on'>Enabled</button>" +
             "<button class='chip" + (!nl.correction ? " active" : "") + "' data-nlc='off'>Disabled</button></div>" +
           "<p class='caption' style='margin-top:8px'>Disabled means no syndrome-based recovery is applied: the residual is the raw physical error.</p>" +
-          "<div class='toolbar' style='margin-top:14px'><button class='btn primary' id='nl-run'>Run simulation</button><button class='btn' id='nl-aer-run'>Run on a backend (in-circuit noise)</button></div>" +
+          "<div class='toolbar' style='margin-top:14px'><button class='btn primary' id='nl-run'>Run simulation</button><button class='btn' id='nl-aer-run'>Run on a backend (in-circuit noise)</button>" + CircuitRun.hwBadge() + "</div>" +
           (nl.mc ? "<p class='caption' style='margin-top:10px'>Sampled with " + nl.trials.toLocaleString() + " trials — a statistical estimate.</p>" : "") +
         "</div>";
       $all("#nl-controls [data-nlm]", root).forEach(function (el) { el.addEventListener("click", function () { nl.model = el.getAttribute("data-nlm"); nl.mc = null; update(); }); });

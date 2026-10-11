@@ -506,7 +506,7 @@
         "<div class='step'><span class='caption'>Postselection</span><div class='chip-row' style='margin-top:8px'>" +
           "<button class='chip" + (st.postselect ? " active" : "") + "' type='button' data-ps='on'>On</button>" +
           "<button class='chip" + (!st.postselect ? " active" : "") + "' type='button' data-ps='off'>Off</button></div></div>" +
-        "<div class='toolbar' style='margin-top:16px'><button class='btn primary' id='m4-p4-run'>Run experiment</button><button class='btn' id='m4-p4-aer'>Run on a backend (in-circuit noise)</button></div>";
+        "<div class='toolbar' style='margin-top:16px'><button class='btn primary' id='m4-p4-run'>Run experiment</button><button class='btn' id='m4-p4-aer'>Run on a backend (in-circuit noise)</button>" + window.CircuitRun.hwBadge() + "</div>";
     }
 
     function statsHTML() {
@@ -523,16 +523,23 @@
     function update() {
       UI.$sel("#m4-p4-controls", root).innerHTML = controls();
       UI.$sel("#m4-p4-stats", root).innerHTML = statsHTML();
-      UI.$sel("#m4-p4-extra", root).innerHTML = st.result
-        ? "<div class='cmp-row'><span class='caption'>Exact expectation (all 4⁴ frames)</span><span class='m'>accept " + (100 * Ice.exact(st.p, st.model).pAccept).toFixed(1) + "% · logical|accepted " + (100 * Ice.exact(st.p, st.model).logicalRate).toFixed(2) + "%</span></div>"
-        : "";
+      var ex = Ice.exact(st.p, st.model);
+      UI.$sel("#m4-p4-extra", root).innerHTML =
+          "<div class='cmp-row'><span class='caption'>Detected → discarded when postselecting</span><span class='m'>" + (100 * ex.detectedRate).toFixed(1) + "%</span></div>" +
+          "<div class='crun-bars' style='margin-top:10px'>" +
+            "<div class='crun-bar'><span class='crun-key'>discarded</span><span class='crun-track'><span class='crun-fill' style='width:" + (100 * ex.detectedRate).toFixed(1) + "%'></span></span><span class='crun-count mono'>" + (100 * ex.detectedRate).toFixed(0) + "%</span></div>" +
+            "<div class='crun-bar'><span class='crun-key'>accepted</span><span class='crun-track'><span class='crun-fill' style='width:" + (100 * ex.pAccept).toFixed(1) + "%'></span></span><span class='crun-count mono'>" + (100 * ex.pAccept).toFixed(0) + "%</span></div>" +
+          "</div>" +
+          "<div class='cmp-row' style='margin-top:12px'><span class='caption'>Logical error rate · all runs</span><span class='m'>" + (100 * ex.logicalAll).toFixed(2) + "%</span></div>" +
+          "<div class='cmp-row'><span class='caption'>Logical error rate · accepted (postselected)</span><span class='m'>" + (100 * ex.logicalRate).toFixed(2) + "%</span></div>" +
+          "<p class='caption' style='margin-top:8px'>Exact over all 4⁴ frames, so it does not depend on the trials or on the toggle.</p>";
       UI.$sel("#m4-p4-note", root).innerHTML = UI.keyIdea("Read carefully",
-        "Postselection keeps only runs whose state stays in the code space — a real improvement in sample quality — but it throws data away. An accepted run is <em>not</em> a guarantee of success: a weight-two logical operator has a trivial syndrome and slips through unnoticed.");
+        "Postselection throws away every run with a nontrivial syndrome. What survives is in the code space — that is the gain in sample quality — but the logical errors of this code are exactly the undetectable weight-two operators, so they all survive too. That is why the logical error rate among the accepted runs is not necessarily lower: detection is not correction.");
       // wiring
       var p = UI.$sel("#m4-p4-p", root); if (p) p.addEventListener("input", function (e) { st.p = Number(e.target.value); update(); });
       UI.$all("#m4-p4-controls [data-model]", root).forEach(function (b) { b.addEventListener("click", function () { st.model = b.getAttribute("data-model"); update(); }); });
       UI.$all("#m4-p4-controls [data-trials]", root).forEach(function (b) { b.addEventListener("click", function () { st.trials = Number(b.getAttribute("data-trials")); update(); }); });
-      UI.$all("#m4-p4-controls [data-ps]", root).forEach(function (b) { b.addEventListener("click", function () { st.postselect = b.getAttribute("data-ps") === "on"; update(); }); });
+      UI.$all("#m4-p4-controls [data-ps]", root).forEach(function (b) { b.addEventListener("click", function () { st.postselect = b.getAttribute("data-ps") === "on"; st.result = null; update(); }); });
       UI.$sel("#m4-p4-run", root).addEventListener("click", function () { st.result = Ice.monteCarlo(st.p, st.model, st.trials, st.postselect); update(); });
       UI.$sel("#m4-p4-aer", root).addEventListener("click", runAerP4);
     }
@@ -556,8 +563,9 @@
             "<div><div class='caption'>" + (res.mode === "backend" ? "Noise-free reference (Aer)" : "Noise-free circuit (Qollab)") + " · detected " + Math.round(100 * res.ideal.detected) + "%</div>" + window.CircuitRun.barsHTML(res.ideal.counts, 4) + "</div>" +
             "<div><div class='caption'>" + (res.mode === "backend" ? "Noisy circuit (device)" : "Noisy circuit (injected)") + " · detected " + Math.round(100 * res.noisy.detected) + "%</div>" + window.CircuitRun.barsHTML(res.noisy.counts, 4) + "</div>" +
           "</div>" +
-          "<div class='cmp-row' style='margin-top:12px'><span class='caption'>Postselection acceptance</span><span class='m'>" + (100 * ex.pAccept).toFixed(1) + "%</span></div>" +
-          "<div class='cmp-row'><span class='caption'>Logical error among accepted</span><span class='m'>" + (100 * ex.logicalRate).toFixed(2) + "%</span></div>" +
+          "<div class='cmp-row' style='margin-top:12px'><span class='caption'>Detected → discarded when postselecting</span><span class='m'>" + (100 * ex.detectedRate).toFixed(1) + "%</span></div>" +
+          "<div class='cmp-row'><span class='caption'>Logical error · all runs</span><span class='m'>" + (100 * ex.logicalAll).toFixed(2) + "%</span></div>" +
+          "<div class='cmp-row'><span class='caption'>Logical error · accepted (postselected)</span><span class='m'>" + (100 * ex.logicalRate).toFixed(2) + "%</span></div>" +
           (res.citations && res.citations.length
             ? "<details class='expand' style='margin-top:12px'><summary>Noise models &amp; references</summary><div>" + res.citations.map(function (c) { return "<div class='caption' style='margin-top:4px'>" + c + "</div>"; }).join("") + "</div></details>"
             : "");

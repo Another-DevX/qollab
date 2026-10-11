@@ -73,8 +73,8 @@ MODELS = {
     },
     "surface": {
         "module": surface_mod,
-        "title": "Surface code d = 3 under in-circuit noise",
-        "protected": "one logical qubit (memory) — surface code d = 3 (Z-checks)",
+        "title": "Surface code under in-circuit noise",
+        "protected": "one logical qubit (memory) — surface code (Z-checks)",
         "cite": "Fowler et al., Phys. Rev. A 86, 032324 (2012) — surface codes",
         "detector": _any_ancilla,
     },
@@ -140,7 +140,23 @@ def run(backend, params_json="{}"):
 
     deps = _aer()
     AerSimulator = deps[0]
-    qc = spec["module"].build(error_qubit, error_pauli)
+
+    d = int(opts.get("d") or 3)
+    if model_id == "surface":
+        if d < 3 or d % 2 == 0:
+            d = 3
+        qc = spec["module"].build(d, error_qubit, error_pauli)
+        # d = 5, 7 have too many qubits for a state vector; the Z-check round is
+        # Clifford, so the stabilizer method is exact and scales.
+        method = "stabilizer"
+    else:
+        qc = spec["module"].build(error_qubit, error_pauli)
+        method = "automatic"
+
+    def sim(noise_model=None):
+        if noise_model is not None:
+            return AerSimulator(method=method, noise_model=noise_model)
+        return AerSimulator(method=method)
 
     # Run a real circuit on the Qollab backend in every case. On an ideal backend
     # (built-in / AWS Braket) we add our own noise channel with Aer; on a
@@ -153,15 +169,15 @@ def run(backend, params_json="{}"):
 
     if backend is not None and _backend_has_noise(backend):
         noisy = run_circuit(backend, qc, shots)
-        ideal = run_circuit(AerSimulator(), qc, shots)
+        ideal = run_circuit(sim(), qc, shots)
         mode = "backend"
     elif backend is not None:
         ideal = run_circuit(backend, qc, shots)
-        noisy = run_circuit(AerSimulator(noise_model=_noise_model(channel, p, deps)), qc, shots)
+        noisy = run_circuit(sim(_noise_model(channel, p, deps)), qc, shots)
         mode = "injected"
     else:  # no backend (local tests): Aer for both
-        ideal = run_circuit(AerSimulator(), qc, shots)
-        noisy = run_circuit(AerSimulator(noise_model=_noise_model(channel, p, deps)), qc, shots)
+        ideal = run_circuit(sim(), qc, shots)
+        noisy = run_circuit(sim(_noise_model(channel, p, deps)), qc, shots)
         mode = "local"
 
     ideal = {str(k): int(v) for k, v in ideal.items()}
@@ -170,13 +186,14 @@ def run(backend, params_json="{}"):
     detect = spec["detector"]
     return json.dumps({
         "model": model_id,
-        "title": spec["title"],
+        "title": spec["title"] + (" · d = " + str(d) if model_id == "surface" else ""),
         "protected": spec["protected"],
         "channel": channel,
         "p": p,
+        "d": d,
         "mode": mode,
         "backend": backend_name,
-        "qubits": spec["module"].QUBITS,
+        "qubits": qc.num_qubits,
         "shots": shots,
         "ideal": {"counts": ideal, "detected": probability(ideal, detect)},
         "noisy": {"counts": noisy, "detected": probability(noisy, detect)},

@@ -1225,6 +1225,59 @@
     return out.join('');
   }
 
+  /* Shared "run the surface code on a backend" panel: a distance selector plus
+   * a run button that uses the lab's physical error rate p and noise model. */
+  function surfaceNoisePanel(page, hostSel, opts) {
+    var host = page.querySelector(hostSel);
+    if (!host) return;
+    var ds = opts.distances || [3, 5, 7];
+    var state = { d: ds[0] };
+    host.innerHTML =
+      '<p class="caption">Pick a code distance. The circuit uses the physical error rate p and the noise model chosen above, and runs on the Qollab backend you selected.</p>' +
+      '<div class="chip-row" style="margin-top:8px" data-sd>' + ds.map(function (d) {
+        return '<button class="chip' + (state.d === d ? ' active' : '') + '" type="button" data-d="' + d + '"><span class="m">d</span> = ' + d + '</button>';
+      }).join('') + '</div>' +
+      '<div class="toolbar" style="margin-top:12px"><button class="btn primary" data-srun>Run this distance on a backend</button>' +
+        window.CircuitRun.hwBadge() + '<span class="caption" data-sstatus></span></div>' +
+      '<div data-sout></div>';
+    var out = host.querySelector('[data-sout]');
+    var status = host.querySelector('[data-sstatus]');
+    var btn = host.querySelector('[data-srun]');
+    function paint() {
+      Array.prototype.slice.call(host.querySelectorAll('[data-sd] [data-d]')).forEach(function (b) {
+        b.classList.toggle('active', Number(b.getAttribute('data-d')) === state.d);
+      });
+    }
+    Array.prototype.slice.call(host.querySelectorAll('[data-sd] [data-d]')).forEach(function (b) {
+      b.addEventListener('click', function () { state.d = Number(b.getAttribute('data-d')); paint(); });
+    });
+    if (!window.CircuitRun.available()) status.textContent = 'Run inside Qollab.';
+    btn.addEventListener('click', function () {
+      var p = opts.p(), channel = opts.channel();
+      btn.disabled = true;
+      out.innerHTML = '<p class="caption">Submitting…</p>';
+      window.CircuitRun.runNoisy({ model: 'surface', d: state.d, channel: channel, p: p, shots: 2048 }).then(function (res) {
+        var dm = channel === 'depol' ? 'depolarizing' : 'bitflip';
+        var r = D.runTrials(state.d, p, dm, 2000, Math.random);
+        var pl = r.trials ? r.failures / r.trials : 0;
+        status.textContent = res.shots + ' shots · d = ' + state.d + ' · ' + channel + ' @ p = ' + res.p + (res.backend ? ' · ' + res.backend : '');
+        out.innerHTML =
+          '<div class="notice" style="margin-top:12px"><p><b>Protected:</b> ' + res.protected + ' · <span class="m">d</span> = ' + state.d + '</p></div>' +
+          '<p class="caption" style="margin-top:8px">Ran on the Qollab backend' + (res.backend ? ' (' + res.backend + ')' : '') + ' · ' +
+            (res.mode === 'backend' ? 'device noise model' : 'ideal circuit, noise injected with Aer') + '.</p>' +
+          '<div class="grid-two" style="margin-top:12px">' +
+            '<div><div class="caption">' + (res.mode === 'backend' ? 'Noise-free reference (Aer)' : 'Noise-free circuit (Qollab)') + ' · detected ' + Math.round(100 * res.ideal.detected) + '%</div>' + window.CircuitRun.barsHTML(res.ideal.counts, 4) + '</div>' +
+            '<div><div class="caption">' + (res.mode === 'backend' ? 'Noisy circuit (device)' : 'Noisy circuit (injected)') + ' · detected ' + Math.round(100 * res.noisy.detected) + '%</div>' + window.CircuitRun.barsHTML(res.noisy.counts, 4) + '</div>' +
+          '</div>' +
+          '<div class="cmp-row" style="margin-top:12px"><span class="caption">Logical failure after decoding (<span class="m">d</span> = ' + state.d + ', p = ' + res.p + ')</span><span class="m">' + (100 * pl).toFixed(2) + '%</span></div>' +
+          '<p class="caption" style="margin-top:8px">Below threshold a bigger <span class="m">d</span> lowers the logical failure — the same decoder the chart above uses.</p>';
+      }).catch(function (err) {
+        status.textContent = '';
+        out.innerHTML = '<div class="notice"><p>' + ((err && err.message) || err) + '</p></div>';
+      }).then(function () { btn.disabled = false; });
+    });
+  }
+
   function renderThreshold(page) {
     var st = {
       p: 0.05, model: 'bitflip', ds: { 3: true, 5: true, 7: true }, trials: 1000, log: false,
@@ -1430,19 +1483,12 @@
       host.innerHTML =
         '<div class="page-head"><div class="meta"><span class="kick">On hardware · real noise</span></div>' +
           '<h2 class="headline" style="font-size:1.6rem">Run the surface code with in-circuit noise</h2>' +
-          '<p class="dek" style="margin-top:8px">On an ideal backend we build the exact d = 3 Z-check circuit and attach a noise channel to every gate, then run it on a classical Aer simulator. Compare the noise-free and noisy syndromes, and the decoder\'s corrected logical failure.</p></div>' +
+          '<p class="dek" style="margin-top:8px">The circuit is a distance-d Z-check round. It runs on the Qollab backend you selected; on an ideal backend the noise channel is injected with Aer.</p></div>' +
         '<div class="panel" style="margin-top:16px" id="c-noise-host"></div>';
-      window.CircuitRun.mountNoise(page.querySelector('#c-noise-host'), {
-        model: 'surface',
-        shots: 2048,
-        onResult: function (res, out) {
-          var dm = res.channel === 'depol' ? 'depolarizing' : 'bitflip';
-          var r = D.runTrials(3, res.p, dm, 2000, Math.random);
-          var pl = r.trials ? r.failures / r.trials : 0;
-          out.insertAdjacentHTML('beforeend',
-            '<div class="cmp-row" style="margin-top:12px"><span class="caption">Logical failure after decoding (d = 3)</span><span class="m">' + (100 * pl).toFixed(2) + '%</span></div>' +
-            '<p class="caption" style="margin-top:8px">The noisy circuit is the raw picture; the matching decoder brings the logical failure down to ' + (100 * pl).toFixed(2) + '% at this p.</p>');
-        }
+      surfaceNoisePanel(page, '#c-noise-host', {
+        p: function () { return st.p; },
+        channel: function () { return st.model === 'depolarizing' ? 'depol' : 'x'; },
+        distances: [3, 5, 7],
       });
     }
 
@@ -1682,19 +1728,12 @@
       host.innerHTML =
         '<div class="page-head"><div class="meta"><span class="kick">On hardware · real noise</span></div>' +
           '<h2 class="headline" style="font-size:1.6rem">Run the surface code with in-circuit noise</h2>' +
-          '<p class="dek" style="margin-top:8px">The model above samples a formula. Here we build the exact d = 3 Z-check circuit, attach a noise channel to every gate and run it on a classical Aer simulator, then decode it.</p></div>' +
+          '<p class="dek" style="margin-top:8px">The model above samples a formula. Here the distance-d Z-check circuit runs on the Qollab backend you selected (noise injected with Aer on an ideal backend) and is decoded.</p></div>' +
         '<div class="panel" style="margin-top:16px" id="m-noise-host"></div>';
-      window.CircuitRun.mountNoise(page.querySelector('#m-noise-host'), {
-        model: 'surface',
-        shots: 2048,
-        onResult: function (res, out) {
-          var dm = res.channel === 'depol' ? 'depolarizing' : 'bitflip';
-          var r = D.runTrials(3, res.p, dm, 2000, Math.random);
-          var pl = r.trials ? r.failures / r.trials : 0;
-          out.insertAdjacentHTML('beforeend',
-            '<div class="cmp-row" style="margin-top:12px"><span class="caption">Logical failure after decoding (d = 3)</span><span class="m">' + (100 * pl).toFixed(2) + '%</span></div>' +
-            '<p class="caption" style="margin-top:8px">The real circuit plus decoder at this p gives a logical failure of ' + (100 * pl).toFixed(2) + '%.</p>');
-        }
+      surfaceNoisePanel(page, '#m-noise-host', {
+        p: function () { return st.p; },
+        channel: function () { return 'x'; },
+        distances: [3, 5],
       });
     }
 

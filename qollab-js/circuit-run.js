@@ -109,6 +109,7 @@
       "<div class='crun'>" +
         "<div class='crun-bar-row'>" +
           "<button class='btn primary' data-crun>" + esc(opts.label || "Run on Qollab") + "</button>" +
+          hwBadge() +
           "<span class='caption' data-crun-status></span>" +
         "</div>" +
         "<div class='crun-out' data-crun-out></div>" +
@@ -157,6 +158,12 @@
 
   function pct(x) { return Math.round(100 * (x || 0)) + "%"; }
 
+  /* A small pill that flags a section which submits a circuit to a backend. */
+  function hwBadge(label) {
+    return "<span class='hw-badge' title='This section runs a circuit on the Qollab backend you pick in the Select QPU dialog'>" +
+      "<span class='dot2' aria-hidden='true'></span>" + esc(label || "Backend job") + "</span>";
+  }
+
   /**
    * Mount a "run the circuit with in-circuit noise" card.
    *
@@ -195,6 +202,7 @@
           "<input id='cn-p' class='range' type='range' min='0' max='0.2' step='0.01' value='" + state.p + "' data-prange style='--range-progress:" + (100 * state.p / 0.2) + "%'></div>" +
         "<div class='crun-bar-row' style='margin-top:12px'>" +
           "<button class='btn primary' data-nrun>Run noisy circuit</button>" +
+          hwBadge() +
           "<span class='caption' data-cn-status></span>" +
         "</div>" +
         "<p class='caption' data-cn-mode style='margin-top:8px'></p>" +
@@ -270,6 +278,7 @@
     mountNoise: mountNoise,
     backendHasNoise: backendHasNoise,
     backendName: backendName,
+    hwBadge: hwBadge,
     barsHTML: barsHTML,
     summaryLine: summaryLine,
   };
