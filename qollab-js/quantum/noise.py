@@ -20,13 +20,29 @@ Code references:
 
 import json
 
-from qiskit_aer import AerSimulator
-from qiskit_aer.noise import NoiseModel, depolarizing_error, pauli_error
-
 from . import iceberg as iceberg_mod
 from . import shor as shor_mod
 from . import surface as surface_mod
 from .common import DEFAULT_SHOTS, bits_of, probability, run_circuit
+
+
+def _aer():
+    """Import the Aer simulator lazily.
+
+    Qollab does not expose `qiskit_aer` to project code, and importing it at the
+    top of this file would make the whole module fail to load — which also stops
+    the runtime from remapping `quantum.noise` (and would break the page). So we
+    only reach for it when a run actually asks for injected noise.
+    """
+    try:
+        from qiskit_aer import AerSimulator
+        from qiskit_aer.noise import NoiseModel, depolarizing_error, pauli_error
+    except Exception as exc:  # noqa: BLE001
+        raise RuntimeError(
+            "In-circuit noise needs the Aer simulator, which this runtime does not expose. "
+            "Pick a Qollab noise-model backend instead (IBM local or IonQ remote)."
+        ) from exc
+    return AerSimulator, NoiseModel, depolarizing_error, pauli_error
 
 CHANNELS = ("x", "z", "depol")
 
@@ -72,8 +88,9 @@ MODELS = {
 }
 
 
-def _errors(channel, p):
+def _errors(channel, p, deps):
     """One- and two-qubit error operators for the chosen channel."""
+    _, _, depolarizing_error, pauli_error = deps
     if channel == "depol":
         return depolarizing_error(p, 1), depolarizing_error(p, 2)
     gate = "X" if channel == "x" else "Z"
@@ -81,9 +98,10 @@ def _errors(channel, p):
     return e1, e1.tensor(e1)
 
 
-def _noise_model(channel, p):
+def _noise_model(channel, p, deps):
+    _, NoiseModel, _, _ = deps
     nm = NoiseModel()
-    e1, e2 = _errors(channel, p)
+    e1, e2 = _errors(channel, p, deps)
     nm.add_all_qubit_quantum_error(e1, ["h", "x", "z"])
     nm.add_all_qubit_quantum_error(e2, ["cx"])
     return nm
@@ -111,10 +129,12 @@ def run(backend, params_json="{}"):
     error_qubit = None if error_qubit is None else int(error_qubit)
     error_pauli = str(opts.get("errorPauli") or "X")
 
+    deps = _aer()
+    AerSimulator = deps[0]
     qc = spec["module"].build(error_qubit, error_pauli)
 
     ideal = run_circuit(AerSimulator(), qc, shots)
-    noisy = run_circuit(AerSimulator(noise_model=_noise_model(channel, p)), qc, shots)
+    noisy = run_circuit(AerSimulator(noise_model=_noise_model(channel, p, deps)), qc, shots)
     ideal = {str(k): int(v) for k, v in ideal.items()}
     noisy = {str(k): int(v) for k, v in noisy.items()}
 
