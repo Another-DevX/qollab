@@ -279,26 +279,30 @@
   .feedback.no{border-color:color-mix(in srgb, var(--bad) 45%, var(--line)); background:color-mix(in srgb, var(--bad) 9%, transparent); color:var(--bad)}
   .feedback .cap{display:block; margin-top:4px; color:var(--muted); font-size:12px}
 
-  /* ---------- Home ---------- */
-  .home-hero{padding-top:24px}
-  .home-title{font-size:clamp(2.6rem,7vw,4rem); margin-top:20px; max-width:18ch}
-  .home-sub{margin-top:20px; font-size:1.15rem; line-height:1.6; color:var(--muted); max-width:52ch}
-  .modsection{margin-top:64px}
+  /* ---------- Home (compact editorial cover) ---------- */
+  .home{padding-top:clamp(16px,2.6vh,34px); padding-bottom:clamp(28px,5vh,60px)}
+  .home-title{font-size:clamp(1.9rem,4.2vw,2.9rem); margin-top:clamp(8px,1.4vh,16px); max-width:24ch}
+  .home-sub{margin-top:clamp(8px,1.3vh,13px); font-size:clamp(1rem,1.35vw,1.12rem); line-height:1.5; color:var(--muted); max-width:60ch}
+  .modsection{margin-top:clamp(20px,3.2vh,38px)}
   .modsection-head{display:flex; align-items:center; gap:16px}
-  .modgrid{display:grid; gap:22px; grid-template-columns:1fr; margin:24px 0 0; padding:0; list-style:none}
+  .modgrid{display:grid; gap:clamp(12px,1.7vh,18px); grid-template-columns:1fr; margin:clamp(12px,1.9vh,20px) 0 0; padding:0; list-style:none}
   @media (min-width:760px){ .modgrid{grid-template-columns:1fr 1fr} }
-  .modcard{display:flex; flex-direction:column; height:100%; border:1px solid var(--line); border-radius:16px;
-    background:var(--surface-2); box-shadow:var(--shadow); padding:26px 24px; text-decoration:none; color:inherit;
-    transition:border-color .18s ease, transform .18s ease}
+  .modcard{display:flex; flex-direction:column; height:100%; border:1px solid var(--line); border-radius:14px;
+    background:var(--surface-2); box-shadow:var(--shadow); padding:clamp(16px,2vh,22px) clamp(18px,1.6vw,22px);
+    text-decoration:none; color:inherit; transition:border-color .18s ease, transform .18s ease}
   .modcard:hover{border-color:color-mix(in srgb, var(--accent) 55%, var(--line)); transform:translateY(-2px)}
   .modcard:focus-visible{outline:2px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset:3px}
   .modcard-label{font-family:var(--mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.22em; color:var(--accent)}
-  .modcard-title{margin-top:14px; font-family:var(--serif); font-weight:600; font-size:1.6rem; line-height:1.15; letter-spacing:-.01em; color:var(--ink)}
-  .modcard-desc{margin-top:12px; font-size:1rem; line-height:1.6; color:var(--muted)}
-  .modcard-action{margin-top:auto; padding-top:22px; display:inline-flex; align-items:center; gap:8px; font-size:.95rem; font-weight:600; color:var(--accent)}
+  .modcard-title{margin-top:clamp(6px,1vh,10px); font-family:var(--serif); font-weight:600; font-size:clamp(1.15rem,1.5vw,1.4rem); line-height:1.18; letter-spacing:-.01em; color:var(--ink)}
+  .modcard-desc{margin-top:clamp(6px,1vh,10px); font-size:.98rem; line-height:1.5; color:var(--muted)}
+  .modcard-action{margin-top:auto; padding-top:clamp(12px,1.7vh,18px); display:inline-flex; align-items:center; gap:8px; font-size:.92rem; font-weight:600; color:var(--accent)}
   .modcard-arrow{transition:transform .18s ease}
   .modcard:hover .modcard-arrow{transform:translateX(4px)}
   @media (prefers-reduced-motion:reduce){ .modcard,.modcard-arrow{transition:none} .modcard:hover{transform:none} }
+  /* Desktop: keep the cover and the four cards inside one viewport where it fits. */
+  @media (min-width:760px) and (min-height:701px){
+    .home{min-height:calc(100dvh - 64px - 74px); display:flex; flex-direction:column; justify-content:center}
+  }
 
   /* ---------- Shor register + circuit ---------- */
   .shor{width:100%; height:auto; display:block}

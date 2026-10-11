@@ -12,28 +12,28 @@
       n: "01",
       href: "#/module-1",
       title: "Understanding Quantum Errors",
-      desc: "Explore Pauli errors, the Bloch sphere, and quantum transformations.",
+      desc: "Pauli operators and the Bloch sphere.",
       status: "ready",
     },
     {
       n: "02",
       href: "#/module-2",
       title: "From Repetition to Shor Code",
-      desc: "Build quantum codes, measure syndromes, and correct logical errors.",
+      desc: "Encoding, syndromes, and recovery.",
       status: "ready",
     },
     {
       n: "03",
       href: "#/module-3",
       title: "Surface Code",
-      desc: "Explore how local stabilizer measurements protect quantum information on a two-dimensional lattice.",
+      desc: "Protecting quantum information on a lattice.",
       status: "ready",
     },
     {
       n: "04",
       href: "#/module-4",
       title: "Iceberg Code",
-      desc: "Explore how four physical qubits detect quantum errors, why some errors cannot be corrected, and how postselection can help.",
+      desc: "Error detection and postselection.",
       status: "ready",
     },
     /* Future modules — not displayed until implemented:
@@ -56,11 +56,11 @@
   function render(root) {
     var ready = MODULES.filter(function (mod) { return mod.status === "ready"; });
     root.innerHTML =
-      "<div class='container'>" +
+      "<div class='container home'>" +
         "<header class='home-hero'>" +
           "<div class='eyebrow'>Interactive quantum learning</div>" +
           "<h1 class='headline home-title'>Quantum Error Correction</h1>" +
-          "<p class='home-sub'>Explore quantum errors, build codes, and discover how quantum information can be protected.</p>" +
+          "<p class='home-sub'>Explore quantum errors, build codes, and learn how quantum information survives noise.</p>" +
         "</header>" +
         "<section aria-label='Modules' class='modsection'>" +
           "<div class='modsection-head'><span class='eyebrow' style='color:var(--faint)'>Modules</span><span class='rule' style='flex:1'></span></div>" +
