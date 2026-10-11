@@ -285,6 +285,8 @@
     runNoisy: runNoisy,
     mount: mount,
     mountNoise: mountNoise,
+    backendHasNoise: backendHasNoise,
+    backendName: backendName,
     barsHTML: barsHTML,
     summaryLine: summaryLine,
   };

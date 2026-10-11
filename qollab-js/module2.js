@@ -1369,10 +1369,8 @@
         pageHead("07", "Quantum Reliability", "Noise Laboratory", "Does quantum error correction always improve reliability?") +
         "<p class='dek' style='margin-top:12px'>Encoding information across multiple qubits can protect against errors, but it also exposes more physical qubits to noise. Does the protection outweigh the risk? Let's find out experimentally.</p>" +
         "<section style='margin-top:32px'><div class='stack' id='nl-controls'></div></section>" +
-        "<section style='margin-top:24px'><div class='panel'><div class='caption'>Logical failure probability vs physical error rate</div><div id='nl-chart' style='margin-top:8px'></div><div class='legend-chart' id='nl-legend'></div></div></section>" +
+        "<section style='margin-top:24px'><div class='panel'><div class='caption'>Logical failure probability vs physical error rate</div><div id='nl-chart' style='margin-top:8px'></div><div class='legend-chart' id='nl-legend'></div><div id='nl-aer-out' style='margin-top:16px'></div></div></section>" +
         "<section id='nl-summary' style='margin-top:24px'></section>" +
-        "<section id='nl-circuit' style='margin-top:32px'></section>" +
-        "<section id='nl-noise' style='margin-top:40px'></section>" +
         "<section id='nl-discovery' style='margin-top:48px'></section>" +
         "<section id='nl-quiz' style='margin-top:64px'></section>" +
         "<aside class='transition'><div class='big'>M3</div><div><span class='eyebrow' style='color:var(--faint)'>Next module</span>" +
@@ -1406,7 +1404,7 @@
             "<button class='chip" + (nl.correction ? " active" : "") + "' data-nlc='on'>Enabled</button>" +
             "<button class='chip" + (!nl.correction ? " active" : "") + "' data-nlc='off'>Disabled</button></div>" +
           "<p class='caption' style='margin-top:8px'>Disabled means no syndrome-based recovery is applied: the residual is the raw physical error.</p>" +
-          "<div class='toolbar' style='margin-top:14px'><button class='btn primary' id='nl-run'>Run simulation</button></div>" +
+          "<div class='toolbar' style='margin-top:14px'><button class='btn primary' id='nl-run'>Run simulation</button><button class='btn' id='nl-aer-run'>Run on a backend (in-circuit noise)</button></div>" +
           (nl.mc ? "<p class='caption' style='margin-top:10px'>Sampled with " + nl.trials.toLocaleString() + " trials — a statistical estimate.</p>" : "") +
         "</div>";
       $all("#nl-controls [data-nlm]", root).forEach(function (el) { el.addEventListener("click", function () { nl.model = el.getAttribute("data-nlm"); nl.mc = null; update(); }); });
@@ -1414,6 +1412,7 @@
       $all("#nl-controls [data-nlc]", root).forEach(function (el) { el.addEventListener("click", function () { nl.correction = el.getAttribute("data-nlc") === "on"; nl.mc = null; update(); }); });
       var slider = $sel("#nl-p", root); if (slider) slider.addEventListener("input", function () { nl.p = Number(slider.value); update(); });
       $sel("#nl-run", root).addEventListener("click", function () { nl.mc = systems().map(function (s) { return { key: s.key, value: Noise.monteCarlo(s.code, nl.model, nl.p, s.correction, nl.trials, Math.random) }; }); update(); });
+      $sel("#nl-aer-run", root).addEventListener("click", runAerExperiment);
       updateSummary();
     }
     function updateSummary() {
@@ -1487,70 +1486,49 @@
       $sel("#quiz-confirm", root).addEventListener("click", function () { quiz = Quiz.confirm(quiz); updateQuiz(); });
       $sel("#quiz-next", root).addEventListener("click", function () { quiz = Quiz.next(quiz); updateQuiz(); });
     }
-    /* One real backend job for the current noise model: encode, inject a single
-     * error of the selected type, and read the stabilizers. */
-    function mountNoiseRun() {
-      var nlr = { code: "repetition" };
-      var host = $sel("#nl-circuit", root);
-      host.innerHTML =
-        "<div class='page-head'><div class='meta'><span class='kick'>On hardware · one job</span></div>" +
-          "<h2 class='headline' style='font-size:1.6rem'>Run the circuit for this noise model</h2>" +
-          "<p class='dek' style='margin-top:8px'>Encode, inject one error of the type chosen above, and read the stabilizers on a backend. Compare the measured detection with the model.</p></div>" +
-        "<div class='panel' style='margin-top:16px'>" +
-          "<div class='caption'>Code</div>" +
-          "<div class='chip-row' style='margin-top:8px' id='nlr-code'>" +
-            [["repetition", "Repetition [[3,1,3]]"], ["shor", "Shor [[9,1,3]]"]].map(function (c) {
-              return "<button class='chip" + (nlr.code === c[0] ? " active" : "") + "' data-nlr='" + c[0] + "'>" + c[1] + "</button>";
-            }).join("") +
-          "</div>" +
-          "<p class='caption' style='margin-top:8px'>The injected error follows the noise model above — " +
-            (nl.model === "z" ? "a phase flip (Z)" : "a bit flip (X)") + " on one physical qubit.</p>" +
-        "</div>" +
-        "<div id='nlr-card' style='margin-top:16px'></div>";
-      function paint() {
-        $all("#nlr-code [data-nlr]", root).forEach(function (el) {
-          el.classList.toggle("active", el.getAttribute("data-nlr") === nlr.code);
-        });
+    /* One real backend job using the noise model and p chosen above. On an ideal
+     * backend we build the exact Shor circuit and inject a standard channel with
+     * Aer; on a noise-model backend we use the backend as is. */
+    function runAerExperiment() {
+      var out = $sel("#nl-aer-out", root);
+      var btn = $sel("#nl-aer-run", root);
+      if (!CircuitRun.available()) {
+        out.innerHTML = "<div class='notice'><p>Run inside Qollab to execute this circuit on a backend.</p></div>";
+        return;
       }
-      $all("#nlr-code [data-nlr]", root).forEach(function (el) {
-        el.addEventListener("click", function () { nlr.code = el.getAttribute("data-nlr"); paint(); });
-      });
-      CircuitRun.mount($sel("#nlr-card", root), {
-        model: function () { return nlr.code; },
-        label: "Run one job",
-        options: function () {
-          return { errorQubit: nlr.code === "repetition" ? 1 : 0, errorPauli: nl.model === "z" ? "Z" : "X" };
-        },
-        onResult: function (result, out) {
-          out.insertAdjacentHTML("beforeend",
-            "<p class='caption' style='margin-top:10px'>One " + (nl.model === "z" ? "Z" : "X") + " error in the " +
-            (nlr.code === "shor" ? "Shor" : "repetition") + " code, measured on the backend.</p>");
-        },
-      });
-    }
-
-    /* In-circuit noise on a classical Aer simulator, for the exact Shor circuit. */
-    function mountNoiseLab() {
-      var host = $sel("#nl-noise", root);
-      host.innerHTML =
-        "<div class='page-head'><div class='meta'><span class='kick'>On hardware · real noise</span></div>" +
-          "<h2 class='headline' style='font-size:1.6rem'>Run the Shor circuit with in-circuit noise</h2>" +
-          "<p class='dek' style='margin-top:8px'>When the selected backend is not Qollab's noisy simulator, we build the exact nine-qubit encoding and attach a standard noise channel to every gate, then run it on a classical Aer simulator. Compare the noise-free and noisy syndromes, and the decoder's corrected logical failure.</p></div>" +
-        "<div class='panel' style='margin-top:16px' id='nl-noise-host'></div>";
-      CircuitRun.mountNoise($sel("#nl-noise-host", root), {
-        shots: 2048,
-        onResult: function (res, out) {
+      btn.disabled = true;
+      out.innerHTML = "<p class='caption'>Submitting…</p>";
+      var job;
+      if (CircuitRun.backendHasNoise && CircuitRun.backendHasNoise()) {
+        job = CircuitRun.run("shor", { shots: 2048 }).then(function (res) {
+          out.innerHTML =
+            "<div class='cmp-row' style='margin-top:12px'><span class='caption'>Protected</span><span class='m'>Shor code [[9,1,3]]</span></div>" +
+            "<div class='caption' style='margin-top:8px'>Backend noise model (" + (CircuitRun.backendName() || "device") + ") · detected " + Math.round(100 * ((res.summary && res.summary.detected) || 0)) + "%</div>" +
+            CircuitRun.barsHTML(res.counts, 4) +
+            "<p class='caption' style='margin-top:8px'>This backend already applies a real device noise model, so no noise is injected.</p>";
+        });
+      } else {
+        job = CircuitRun.runNoisy({ model: "shor", channel: nl.model, p: nl.p, shots: 2048 }).then(function (res) {
           var raw = Noise.exactPL(Noise.CODES.shor, res.channel, res.p, false);
           var fixed = Noise.exactPL(Noise.CODES.shor, res.channel, res.p, true);
-          out.insertAdjacentHTML("beforeend",
+          out.innerHTML =
+            "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> " + res.protected + "</p></div>" +
+            "<div class='grid-two' style='margin-top:12px'>" +
+              "<div><div class='caption'>Noise-free circuit · detected " + Math.round(100 * res.ideal.detected) + "%</div>" + CircuitRun.barsHTML(res.ideal.counts, 4) + "</div>" +
+              "<div><div class='caption'>Noisy circuit (Aer) · detected " + Math.round(100 * res.noisy.detected) + "%</div>" + CircuitRun.barsHTML(res.noisy.counts, 4) + "</div>" +
+            "</div>" +
             "<div class='cmp-row' style='margin-top:12px'><span class='caption'>Logical failure · no correction</span><span class='m'>" + (raw * 100).toFixed(2) + "%</span></div>" +
             "<div class='cmp-row'><span class='caption'>Logical failure · corrected</span><span class='m'>" + (fixed * 100).toFixed(2) + "%</span></div>" +
-            "<p class='caption' style='margin-top:8px'>The noisy circuit is the raw picture; the decoder turns a raw logical failure of " + (raw * 100).toFixed(2) + "% into " + (fixed * 100).toFixed(2) + "%.</p>");
-        }
-      });
+            (res.citations && res.citations.length
+              ? "<details class='expand' style='margin-top:12px'><summary>Noise models &amp; references</summary><div>" + res.citations.map(function (c) { return "<div class='caption' style='margin-top:4px'>" + c + "</div>"; }).join("") + "</div></details>"
+              : "");
+        });
+      }
+      job.catch(function (err) { out.innerHTML = "<div class='notice'><p>" + ((err && err.message) || err) + "</p></div>"; })
+        .then(function () { btn.disabled = false; });
     }
 
-    update(); updateQuiz(); mountNoiseRun(); mountNoiseLab();
+    update(); updateQuiz();
     return null;
   }
 
