@@ -10,34 +10,10 @@
   "use strict";
 
   var MODULES = [
-    {
-      n: "01",
-      href: "#/module-1",
-      title: "Understanding Quantum Errors",
-      desc: "Pauli operators and the Bloch sphere.",
-      status: "ready",
-    },
-    {
-      n: "02",
-      href: "#/module-2",
-      title: "From Repetition to Shor Code",
-      desc: "Encoding, syndromes, and recovery.",
-      status: "ready",
-    },
-    {
-      n: "03",
-      href: "#/module-3",
-      title: "Surface Code",
-      desc: "Protecting quantum information on a lattice.",
-      status: "ready",
-    },
-    {
-      n: "04",
-      href: "#/module-4",
-      title: "Iceberg Code",
-      desc: "Error detection and postselection.",
-      status: "ready",
-    },
+    { n: "01", key: "errors", href: "#/module-1", title: "Understanding Quantum Errors", desc: "Pauli operators and the Bloch sphere.", status: "ready" },
+    { n: "02", key: "shor", href: "#/module-2", title: "From Repetition to Shor Code", desc: "Encoding, syndromes, and recovery.", status: "ready" },
+    { n: "03", key: "iceberg", href: "#/module-4", title: "Iceberg Code", desc: "Error detection and postselection.", status: "ready" },
+    { n: "04", key: "surface", href: "#/module-3", title: "Surface Code", desc: "Protecting quantum information on a lattice.", status: "ready" },
   ];
 
   /* ------------------------------------------------------------------ figures */
@@ -82,21 +58,19 @@
     );
   }
 
-  /* 02 · the three-qubit repetition code with two parity checks. */
-  function repetitionMini() {
-    var dot = function (x) { return "<circle class='mini-node' cx='" + x + "' cy='36' r='3.4'/>"; };
-    return svg("0 0 108 52",
-      "<line class='mini-line' x1='10' y1='36' x2='98' y2='36'/>" +
-      dot(24) + dot(54) + dot(84) +
-      "<rect class='mini-tile' x='20' y='10' width='26' height='14' rx='3'/>" +
-      "<rect class='mini-tile' x='62' y='10' width='26' height='14' rx='3'/>" +
-      "<line class='mini-line' x1='24' y1='24' x2='24' y2='33'/>" +
-      "<line class='mini-line' x1='42' y1='24' x2='42' y2='33'/>" +
-      "<line class='mini-line' x1='66' y1='24' x2='66' y2='33'/>" +
-      "<line class='mini-line' x1='84' y1='24' x2='84' y2='33'/>" +
-      "<text class='mini-label' x='33' y='20' text-anchor='middle'>Z</text>" +
-      "<text class='mini-label' x='75' y='20' text-anchor='middle'>Z</text>"
-    );
+  /* 02 · the Shor code: three blocks of three physical qubits. */
+  function shorMini() {
+    var bx = [6, 40, 74], y = 16, w = 28, h = 26;
+    var body = "";
+    for (var b = 0; b < 3; b++) {
+      var x = bx[b];
+      body += "<rect class='mini-tile' x='" + x + "' y='" + y + "' width='" + w + "' height='" + h + "' rx='4'/>";
+      for (var k = 0; k < 3; k++) body += "<circle class='mini-node' cx='" + (x + 7 + k * 7) + "' cy='" + (y + h / 2) + "' r='2.2'/>";
+    }
+    var centers = [bx[0] + w / 2, bx[1] + w / 2, bx[2] + w / 2];
+    body += "<line class='mini-dash' x1='" + centers[0] + "' y1='7' x2='" + centers[2] + "' y2='7'/>";
+    for (var c = 0; c < 3; c++) body += "<line class='mini-line' x1='" + centers[c] + "' y1='7' x2='" + centers[c] + "' y2='" + y + "'/>";
+    return svg("0 0 108 46", body);
   }
 
   /* 03 · a small surface-code lattice with X- and Z-type tiles. */
@@ -135,7 +109,7 @@
     );
   }
 
-  var FIGS = { "01": blochMini, "02": repetitionMini, "03": latticeMini, "04": icebergMini };
+  var FIGS = { errors: blochMini, shor: shorMini, iceberg: icebergMini, surface: latticeMini };
 
   /* -------------------------------------------------------------------- cards */
 
@@ -143,7 +117,7 @@
     return "<li>" +
       "<a class='modcard' href='" + mod.href + "' aria-label='Explore Module " + mod.n + ": " + mod.title + "'>" +
         "<span class='modcard-head'><span class='modcard-label'>Module</span><span class='modcard-num'>" + mod.n + "</span></span>" +
-        "<span class='modcard-fig'>" + (FIGS[mod.n] ? FIGS[mod.n]() : "") + "</span>" +
+        "<span class='modcard-fig'>" + (FIGS[mod.key] ? FIGS[mod.key]() : "") + "</span>" +
         "<span class='modcard-title'>" + mod.title + "</span>" +
         "<span class='modcard-desc'>" + mod.desc + "</span>" +
         "<span class='modcard-action'>Explore Module <span aria-hidden class='modcard-arrow'>&rarr;</span></span>" +
@@ -158,7 +132,7 @@
         "<div class='home-split'>" +
           "<section class='home-cover' aria-label='Introduction'>" +
             "<p class='eyebrow'>Interactive quantum learning</p>" +
-            "<h1 class='headline home-title'>Quantum<br>Error Correction</h1>" +
+            "<h1 class='headline home-title'>Quantum<br>Error Correction and Detection</h1>" +
             "<p class='home-sub'>Explore quantum errors, build codes, and learn how quantum information survives noise.</p>" +
             "<figure class='home-figure'>" + heroBloch() +
               "<figcaption class='home-figure-cap'><span class='m'>|&psi;&rang; = &alpha;|0&rang; + &beta;|1&rang;</span></figcaption>" +

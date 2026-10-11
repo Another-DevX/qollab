@@ -42,11 +42,14 @@
     this.canvas = canvas; this.ctx = canvas.getContext("2d");
     this.view = { azim: 0.95, elev: 0.36, dist: 3.2 };
     this.arrows = []; this.running = false; this._attached = false; this._drag = false; this._last = [0, 0]; this._raf = 0;
+    /* Caches so a frame never rebuilds static geometry, the camera basis or the
+       sphere gradient; `_dirty` skips drawing entirely while nothing changes. */
+    this._geo = {}; this._grad = null; this._gradKey = ""; this._dirty = true;
     var self = this;
     this._down = function (e) { self._drag = true; self._last = [e.clientX, e.clientY]; if (canvas.setPointerCapture) { try { canvas.setPointerCapture(e.pointerId); } catch (x) {} } };
-    this._move = function (e) { if (!self._drag) return; var dx = e.clientX - self._last[0], dy = e.clientY - self._last[1]; self._last = [e.clientX, e.clientY]; self.view.azim -= dx * 0.008; self.view.elev = clamp(self.view.elev + dy * 0.008, -1.35, 1.35); };
+    this._move = function (e) { if (!self._drag) return; var dx = e.clientX - self._last[0], dy = e.clientY - self._last[1]; self._last = [e.clientX, e.clientY]; self.view.azim -= dx * 0.008; self.view.elev = clamp(self.view.elev + dy * 0.008, -1.35, 1.35); self._dirty = true; };
     this._up = function () { self._drag = false; };
-    this._wheel = function (e) { e.preventDefault(); self.view.dist = clamp(self.view.dist + e.deltaY * 0.0015, 2.3, 5.5); };
+    this._wheel = function (e) { e.preventDefault(); self.view.dist = clamp(self.view.dist + e.deltaY * 0.0015, 2.3, 5.5); self._dirty = true; };
     this._tick = function (now) { self._frame(now); };
     this.resize();
     if (global.ResizeObserver) { this._ro = new ResizeObserver(function () { self.resize(); }); this._ro.observe(canvas); }
@@ -56,6 +59,7 @@
     this.w = Math.max(1, r.width); this.h = Math.max(1, r.height); this.dpr = dpr;
     var pw = Math.round(this.w * dpr), ph = Math.round(this.h * dpr);
     if (this.canvas.width !== pw || this.canvas.height !== ph) { this.canvas.width = pw; this.canvas.height = ph; }
+    this._dirty = true;
   };
   BlochSphere.prototype.setArrows = function (arrows) {
     var prev = {}, i; for (i = 0; i < this.arrows.length; i++) prev[this.arrows[i].id] = this.arrows[i];
@@ -69,6 +73,7 @@
       next.push({ id: a.id, color: a.color, opacity: a.opacity == null ? 1 : a.opacity, current: current, target: target });
     }
     this.arrows = next;
+    this._dirty = true;
   };
   BlochSphere.prototype.start = function () {
     if (this.running) return; this.running = true;
@@ -98,16 +103,21 @@
     var x = vCross([0, 0, 1], z); if (vLen(x) < 1e-6) x = [1, 0, 0]; x = vNorm(x);
     return { x: x, y: vNorm(vCross(z, x)), z: z };
   };
-  BlochSphere.prototype._project = function (p) {
-    var b = this._basis(), X = vDot(p, b.x), Y = vDot(p, b.y), Z = vDot(p, b.z);
+  BlochSphere.prototype._project = function (p, b) {
+    b = b || this._basis();
+    var X = vDot(p, b.x), Y = vDot(p, b.y), Z = vDot(p, b.z);
     var persp = this.view.dist / Math.max(this.view.dist - Z, 0.25), r = Math.min(this.w, this.h) * 0.34;
     return { x: this.w / 2 + X * persp * r, y: this.h / 2 - Y * persp * r, z: Z };
   };
   BlochSphere.prototype._frame = function (now) {
     var dt = Math.min(0.05, (now - this._last) / 1000); this._last = now;
     var t = REDUCE ? 1 : 1 - Math.exp(-dt * 7);
-    for (var i = 0; i < this.arrows.length; i++) this.arrows[i].current = slerp(this.arrows[i].current, this.arrows[i].target, t);
-    this._draw();
+    var moving = false;
+    for (var i = 0; i < this.arrows.length; i++) {
+      var a = this.arrows[i];
+      if (vLen([a.current[0] - a.target[0], a.current[1] - a.target[1], a.current[2] - a.target[2]]) > 1e-4) { a.current = slerp(a.current, a.target, t); moving = true; }
+    }
+    if (moving || this._dirty) { this._draw(); this._dirty = false; }
     if (this.running) this._raf = requestAnimationFrame(this._tick);
   };
   BlochSphere.prototype._strokeRun = function (run, front, back, width, sign) {
@@ -116,8 +126,8 @@
     for (var j = 1; j < run.length; j++) c.lineTo(run[j].x, run[j].y);
     c.strokeStyle = sign >= 0 ? front : back; c.lineWidth = width; c.stroke();
   };
-  BlochSphere.prototype._loop = function (pts, front, back, width) {
-    var proj = [], i; for (i = 0; i < pts.length; i++) proj.push(this._project(pts[i])); proj.push(proj[0]);
+  BlochSphere.prototype._loop = function (pts, front, back, width, b) {
+    var proj = [], i; for (i = 0; i < pts.length; i++) proj.push(this._project(pts[i], b)); proj.push(proj[0]);
     var run = [], sign = null;
     for (i = 0; i < proj.length; i++) {
       var s = proj[i].z >= 0 ? 1 : -1;
@@ -128,9 +138,12 @@
     this._strokeRun(run, front, back, width, sign);
   };
   BlochSphere.prototype._circle = function (mode, value, segs) {
+    var key = mode + value + "_" + segs, cached = this._geo[key];
+    if (cached) return cached;
     var pts = [], i, a;
     if (mode === "lat") { var rr = Math.sqrt(Math.max(0, 1 - value * value)); for (i = 0; i <= segs; i++) { a = i / segs * Math.PI * 2; pts.push([Math.cos(a) * rr, Math.sin(a) * rr, value]); } }
     else for (i = 0; i <= segs; i++) { a = i / segs * Math.PI * 2; pts.push([Math.cos(a) * Math.cos(value), Math.cos(a) * Math.sin(value), Math.sin(value)]); }
+    this._geo[key] = pts;
     return pts;
   };
   BlochSphere.prototype._draw = function () {
@@ -138,26 +151,31 @@
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     c.clearRect(0, 0, this.w, this.h);
     var cx = this.w / 2, cy = this.h / 2, r = Math.min(this.w, this.h) * 0.34;
-    var ball = c.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r);
-    ball.addColorStop(0, "rgba(150,175,225,0.14)"); ball.addColorStop(0.72, "rgba(150,175,225,0.05)"); ball.addColorStop(1, "rgba(150,175,225,0.10)");
-    c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.fillStyle = ball; c.fill();
+    var b = this._basis();
+    var gkey = this.dpr + "|" + Math.round(cx) + "," + Math.round(cy) + "," + Math.round(r);
+    if (this._gradKey !== gkey) {
+      var ball = c.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r);
+      ball.addColorStop(0, "rgba(150,175,225,0.14)"); ball.addColorStop(0.72, "rgba(150,175,225,0.05)"); ball.addColorStop(1, "rgba(150,175,225,0.10)");
+      this._grad = ball; this._gradKey = gkey;
+    }
+    c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); c.fillStyle = this._grad; c.fill();
     c.lineWidth = 1; c.strokeStyle = "rgba(140,160,200,0.35)"; c.stroke();
     var lats = [-0.66, -0.33, 0.33, 0.66], i;
-    for (i = 0; i < lats.length; i++) this._loop(this._circle("lat", lats[i], 72), "rgba(140,160,200,0.30)", "rgba(140,160,200,0.10)", 0.8);
-    this._loop(this._circle("lat", 0, 96), P.equator, "rgba(140,160,200,0.14)", 1.1);
-    for (i = 0; i < 6; i++) this._loop(this._circle("lon", i * Math.PI / 6, 96), "rgba(140,160,200,0.22)", "rgba(140,160,200,0.08)", 0.7);
+    for (i = 0; i < lats.length; i++) this._loop(this._circle("lat", lats[i], 56), "rgba(140,160,200,0.30)", "rgba(140,160,200,0.10)", 0.8, b);
+    this._loop(this._circle("lat", 0, 72), P.equator, "rgba(140,160,200,0.14)", 1.1, b);
+    for (i = 0; i < 6; i++) this._loop(this._circle("lon", i * Math.PI / 6, 56), "rgba(140,160,200,0.22)", "rgba(140,160,200,0.08)", 0.7, b);
     var axes = [{ d: [1, 0, 0], c: P.axisX, l: "X" }, { d: [0, 1, 0], c: P.axisY, l: "Y" }, { d: [0, 0, 1], c: P.axisZ, l: "Z" }];
     for (i = 0; i < axes.length; i++) {
-      var a = axes[i], p0 = this._project(vScale(a.d, -1.02)), p1 = this._project(vScale(a.d, 1.02));
+      var a = axes[i], p0 = this._project(vScale(a.d, -1.02), b), p1 = this._project(vScale(a.d, 1.02), b);
       c.beginPath(); c.moveTo(p0.x, p0.y); c.lineTo(p1.x, p1.y);
       c.strokeStyle = a.c; c.globalAlpha = 0.6; c.lineWidth = 1.3; c.stroke(); c.globalAlpha = 1;
-      var lp = this._project(vScale(a.d, 1.3));
+      var lp = this._project(vScale(a.d, 1.3), b);
       c.font = "600 13px ui-monospace, Menlo, monospace"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = a.c; c.fillText(a.l, lp.x, lp.y);
     }
-    var o = this._project([0, 0, 0]);
+    var o = this._project([0, 0, 0], b);
     c.beginPath(); c.arc(o.x, o.y, 2, 0, Math.PI * 2); c.fillStyle = "rgba(120,140,180,0.7)"; c.fill();
     for (i = 0; i < this.arrows.length; i++) {
-      var ar = this.arrows[i], dir = vNorm(ar.current), tip = this._project(dir);
+      var ar = this.arrows[i], dir = vNorm(ar.current), tip = this._project(dir, b);
       var depth = (tip.z + 1) / 2, alpha = (ar.opacity == null ? 1 : ar.opacity) * (0.55 + 0.45 * depth);
       var dx = tip.x - o.x, dy = tip.y - o.y, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
       c.globalAlpha = alpha;

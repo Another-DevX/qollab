@@ -1370,9 +1370,9 @@
         "<section id='nl-discovery' style='margin-top:48px'></section>" +
         "<section id='nl-quiz' style='margin-top:64px'></section>" +
         "<aside class='transition'><div class='big'>M3</div><div><span class='eyebrow' style='color:var(--faint)'>Next module</span>" +
-          "<p class='q'>Can quantum information be protected using local measurements on a two-dimensional lattice?</p>" +
-          "<p class='teaser'>The surface code spreads protection across a grid — the next module.</p>" +
-          "<div style='margin-top:20px'><a class='btn primary' href='#/module-3'>Explore Surface Codes →</a></div></div></aside>" +
+          "<p class='q'>Can a code detect errors it cannot correct — and still be useful?</p>" +
+          "<p class='teaser'>The Iceberg code shows detection without correction — the next module.</p>" +
+          "<div style='margin-top:20px'><a class='btn primary' href='#/module-4'>Explore the Iceberg Code →</a></div></div></aside>" +
       "</div>";
 
     function systems() {
