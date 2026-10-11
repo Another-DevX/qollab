@@ -72,8 +72,9 @@ trayectorias y ejes de rotación.
   Módulo 4) envían el circuito exacto de `quantum/*.py` a un backend y usan los
   *counts* devueltos para leer el síndrome. Fuera de Qollab esos botones quedan
   desactivados.
-- **Ruido in-circuit (Aer).** Cuando el backend no es el *noisy* de Qollab, la
-  lección de Shor construye el circuito exacto, le añade un canal de ruido estándar
+- **Ruido in-circuit (Aer).** Cuando el backend es **ideal** (Built-in simulator o
+  AWS Braket), la lección de Shor construye el circuito exacto, le añade un canal de
+  ruido estándar
   (bit-flip X, phase-flip Z o depolarizante) a cada compuerta y lo corre en un
   simulador Aer clásico, comparando las distribuciones ideal y ruidosa y mostrando
   la corrección del decoder. Modelos: depolarizante (Nielsen & Chuang, 2000); errores

@@ -24,6 +24,26 @@
     try { return typeof backend !== "undefined" && !!backend; } catch (e) { return false; }
   }
 
+  /* Backend name from the injected object (string or function, per Qollab). */
+  function backendName() {
+    try {
+      if (typeof backend === "undefined" || !backend) return "";
+      var n = backend.name;
+      return String(typeof n === "function" ? n() : (n || ""));
+    } catch (e) { return ""; }
+  }
+
+  /* Per Qollab's "Compute backends" docs, the noise-model backends are the IBM
+   * local simulators and the IonQ remote simulators (plus IonQ hardware); the
+   * built-in and AWS Braket simulators are ideal. We only inject our own noise
+   * on the ideal ones. */
+  function backendHasNoise() {
+    var low = backendName().toLowerCase();
+    if (/braket|built-?in|ideal/.test(low)) return false;
+    if (/ibm|ionq/.test(low)) return true;
+    try { return !!(typeof backend !== "undefined" && backend && backend.hardware); } catch (e) { return false; }
+  }
+
   /* The runner is exposed by circuits.js, which main.js imports statically so
    * Qollab's bundler ships it. No dynamic import here: `import()` resolved to
    * /_nuxt/circuits.js and 404'd because the file was never bundled. */
@@ -171,6 +191,7 @@
           "<button class='btn primary' data-nrun>Run noisy circuit</button>" +
           "<span class='caption' data-cn-status></span>" +
         "</div>" +
+        "<p class='caption' data-cn-mode style='margin-top:8px'></p>" +
         "<div data-nout></div>" +
       "</div>";
 
@@ -197,11 +218,36 @@
       btn.disabled = true;
       status.textContent = "Run inside Qollab to execute this circuit.";
     }
+    var modeEl = host.querySelector("[data-cn-mode]");
+    if (available()) {
+      modeEl.textContent = backendHasNoise()
+        ? "This backend already applies a noise model (" + (backendName() || "device") + "); the run uses it directly — no noise is injected."
+        : "This backend is ideal; the circuit will get the injected noise channel below.";
+    }
 
     btn.addEventListener("click", function () {
       btn.disabled = true;
-      status.textContent = "Building the noisy circuit…";
       out.innerHTML = "";
+      if (backendHasNoise()) {
+        // The backend already carries a real device noise model: use it as is.
+        status.textContent = "Running on the backend's noise model…";
+        run("shor", { shots: opts.shots || 2048 }).then(function (res) {
+          status.textContent = res.shots + " shots · " + (backendName() || "backend") + " (device noise model)";
+          out.innerHTML =
+            "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> one logical qubit (memory) — Shor code [[9,1,3]]</p></div>" +
+            "<div class='caption' style='margin-top:12px'>Backend noise model · detected " + pct(res.summary && res.summary.detected) + "</div>" +
+            barsHTML(res.counts, 4) +
+            (res.summary && res.summary.note ? "<p class='caption' style='margin-top:6px'>" + esc(res.summary.note) + "</p>" : "");
+        }).catch(function (err) {
+          status.textContent = "";
+          out.innerHTML = "<div class='notice'><p>" + esc((err && err.message) || err) + "</p></div>";
+        }).then(function () {
+          btn.disabled = !available();
+        });
+        return;
+      }
+      // Ideal backend: inject our own noise channel with Aer.
+      status.textContent = "Building the noisy circuit…";
       runNoisy({ channel: state.channel, p: state.p, shots: opts.shots || 2048 }).then(function (res) {
         status.textContent = res.shots + " shots · " + res.channel + " @ p = " + res.p;
         out.innerHTML =
