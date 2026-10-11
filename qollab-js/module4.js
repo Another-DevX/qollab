@@ -489,10 +489,10 @@
         "<section class='grid-two' style='margin-top:32px'>" +
           "<div class='sticky-col'><div class='panel'><h3>Setup</h3><div id='m4-p4-controls'></div></div></div>" +
           "<div class='stack'><div class='panel'><h3>Results</h3><div class='grid2' id='m4-p4-stats'></div>" +
-            "<div id='m4-p4-extra' style='margin-top:16px'></div></div></div>" +
+            "<div id='m4-p4-extra' style='margin-top:16px'></div>" +
+            "<div id='m4-p4-aer-out' style='margin-top:16px'></div></div></div>" +
         "</section>" +
         "<div style='margin-top:24px' id='m4-p4-note'></div>" +
-        "<section id='m4-p4-noise' style='margin-top:40px'></section>" +
         UI.transition("05", "Can an error change logical information without being detected?", "If detection is not correction, some errors must slip through unseen. Find one.", "#/module-4/break-the-code", "Break the code →") +
       "</div>";
 
@@ -506,7 +506,7 @@
         "<div class='step'><span class='caption'>Postselection</span><div class='chip-row' style='margin-top:8px'>" +
           "<button class='chip" + (st.postselect ? " active" : "") + "' type='button' data-ps='on'>On</button>" +
           "<button class='chip" + (!st.postselect ? " active" : "") + "' type='button' data-ps='off'>Off</button></div></div>" +
-        "<div class='toolbar' style='margin-top:16px'><button class='btn primary' id='m4-p4-run'>Run experiment</button></div>";
+        "<div class='toolbar' style='margin-top:16px'><button class='btn primary' id='m4-p4-run'>Run experiment</button><button class='btn' id='m4-p4-aer'>Run on a backend (in-circuit noise)</button></div>";
     }
 
     function statsHTML() {
@@ -534,28 +534,38 @@
       UI.$all("#m4-p4-controls [data-trials]", root).forEach(function (b) { b.addEventListener("click", function () { st.trials = Number(b.getAttribute("data-trials")); update(); }); });
       UI.$all("#m4-p4-controls [data-ps]", root).forEach(function (b) { b.addEventListener("click", function () { st.postselect = b.getAttribute("data-ps") === "on"; update(); }); });
       UI.$sel("#m4-p4-run", root).addEventListener("click", function () { st.result = Ice.monteCarlo(st.p, st.model, st.trials, st.postselect); update(); });
+      UI.$sel("#m4-p4-aer", root).addEventListener("click", runAerP4);
     }
-    function mountNoiseP4() {
-      var host = UI.$sel("#m4-p4-noise", root);
-      host.innerHTML =
-        "<div class='page-head'><div class='meta'><span class='kick'>On hardware · real noise</span></div>" +
-          "<h2 class='headline' style='font-size:1.6rem'>Run the Iceberg circuit with in-circuit noise</h2>" +
-          "<p class='dek' style='margin-top:8px'>On an ideal backend we build the exact [[4,2,2]] detection circuit and attach a noise channel to every gate, then run it on a classical Aer simulator. Compare the noise-free and noisy syndromes, and the logical error left after postselection.</p></div>" +
-        "<div class='panel' style='margin-top:16px' id='m4-p4-noise-host'></div>";
-      window.CircuitRun.mountNoise(UI.$sel("#m4-p4-noise-host", root), {
-        model: "iceberg",
-        shots: 2048,
-        onResult: function (res, out) {
-          var ex = Ice.exact(res.p, res.channel);
-          out.insertAdjacentHTML("beforeend",
-            "<div class='cmp-row' style='margin-top:12px'><span class='caption'>Postselection acceptance</span><span class='m'>" + (100 * ex.pAccept).toFixed(1) + "%</span></div>" +
-            "<div class='cmp-row'><span class='caption'>Logical error among accepted</span><span class='m'>" + (100 * ex.logicalRate).toFixed(2) + "%</span></div>" +
-            "<p class='caption' style='margin-top:8px'>The noisy circuit is the raw picture; postselection keeps only the runs whose syndrome is trivial, leaving a logical error of " + (100 * ex.logicalRate).toFixed(2) + "%.</p>");
-        }
-      });
+    /* One real backend job using the noise model and p chosen above. */
+    function runAerP4() {
+      var out = UI.$sel("#m4-p4-aer-out", root);
+      var btn = UI.$sel("#m4-p4-aer", root);
+      if (!window.CircuitRun.available()) {
+        out.innerHTML = "<div class='notice'><p>Run inside Qollab to execute this circuit on a backend.</p></div>";
+        return;
+      }
+      btn.disabled = true;
+      out.innerHTML = "<p class='caption'>Submitting…</p>";
+      window.CircuitRun.runNoisy({ model: "iceberg", channel: st.model, p: st.p, shots: 2048 }).then(function (res) {
+        var ex = Ice.exact(res.p, res.channel);
+        out.innerHTML =
+          "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> " + res.protected + "</p></div>" +
+          "<p class='caption' style='margin-top:8px'>Ran on the Qollab backend" + (res.backend ? " (" + res.backend + ")" : "") + " · " +
+            (res.mode === "backend" ? "device noise model" : "ideal circuit, noise injected with Aer") + ".</p>" +
+          "<div class='grid-two' style='margin-top:12px'>" +
+            "<div><div class='caption'>" + (res.mode === "backend" ? "Noise-free reference (Aer)" : "Noise-free circuit (Qollab)") + " · detected " + Math.round(100 * res.ideal.detected) + "%</div>" + window.CircuitRun.barsHTML(res.ideal.counts, 4) + "</div>" +
+            "<div><div class='caption'>" + (res.mode === "backend" ? "Noisy circuit (device)" : "Noisy circuit (injected)") + " · detected " + Math.round(100 * res.noisy.detected) + "%</div>" + window.CircuitRun.barsHTML(res.noisy.counts, 4) + "</div>" +
+          "</div>" +
+          "<div class='cmp-row' style='margin-top:12px'><span class='caption'>Postselection acceptance</span><span class='m'>" + (100 * ex.pAccept).toFixed(1) + "%</span></div>" +
+          "<div class='cmp-row'><span class='caption'>Logical error among accepted</span><span class='m'>" + (100 * ex.logicalRate).toFixed(2) + "%</span></div>" +
+          (res.citations && res.citations.length
+            ? "<details class='expand' style='margin-top:12px'><summary>Noise models &amp; references</summary><div>" + res.citations.map(function (c) { return "<div class='caption' style='margin-top:4px'>" + c + "</div>"; }).join("") + "</div></details>"
+            : "");
+      }).catch(function (err) {
+        out.innerHTML = "<div class='notice'><p>" + ((err && err.message) || err) + "</p></div>";
+      }).then(function () { btn.disabled = false; });
     }
     update();
-    mountNoiseP4();
     return null;
   }
 

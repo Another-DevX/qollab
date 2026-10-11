@@ -14,9 +14,13 @@
  * possible and flips the qubits along the chosen paths.
  */
 (function (root, factory) {
-  var Decoder = typeof module === 'object' && module.exports && typeof require === 'function'
-    ? factory(require('./surface.js'))
-    : factory(root.Surface);
+  // Prefer the global that surface.js sets: in Qollab `require('./surface.js')`
+  // returns an empty module namespace, which left `Surface` without its API.
+  var Surface = root.Surface;
+  if (!Surface && typeof require === 'function' && typeof module === 'object' && module.exports) {
+    Surface = require('./surface.js');
+  }
+  var Decoder = factory(Surface);
   if (typeof module === 'object' && module.exports) module.exports = Decoder;
   root.Decoder = Decoder;
 })(typeof self !== 'undefined' ? self : globalThis, function (Surface) {

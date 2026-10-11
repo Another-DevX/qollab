@@ -9,12 +9,13 @@
  * Randomness comes from a seeded generator, so rounds are reproducible.
  */
 (function (root, factory) {
-  var Game;
-  if (typeof module === 'object' && module.exports && typeof require === 'function') {
-    Game = factory(require('./surface.js'), require('./decoder.js'));
-  } else {
-    Game = factory(root.Surface, root.Decoder);
+  // Prefer the globals set by surface.js / decoder.js (see decoder.js).
+  var Surface = root.Surface, Decoder = root.Decoder;
+  if ((!Surface || !Decoder) && typeof require === 'function' && typeof module === 'object' && module.exports) {
+    Surface = Surface || require('./surface.js');
+    Decoder = Decoder || require('./decoder.js');
   }
+  var Game = factory(Surface, Decoder);
   if (typeof module === 'object' && module.exports) module.exports = Game;
   root.Game = Game;
 })(typeof self !== 'undefined' ? self : globalThis, function (Surface, Decoder) {
