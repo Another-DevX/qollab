@@ -190,7 +190,7 @@
     ["04", "Building the Shor Code", "Combine protections using nine physical qubits.", "#/module-2/shor-code"],
     ["05", "Detecting and Correcting Errors", "Detect and correct any single-qubit error.", "#/module-2/shor-decoder"],
     ["06", "Breaking the Code", "Discover code distance and logical failures.", "#/module-2/break-code"],
-    ["07", "Noise Laboratory", "Find out when error correction helps.", "#/module-2/noise-lab"],
+    ["07", "Noise Laboratory", "Find out when error correction helps.", "#/module-2/noise-lab", true],
   ];
   function shorCoverFig() {
     var bx = [24, 156, 288], w = 108, y = 60, h = 170, r = 22;
@@ -227,7 +227,7 @@
       ctaHref: "#/module-2/repetition-code", ctaLabel: "Start Experimenting \u2192",
       meta: "\u2248 15 min \u00b7 7 lessons",
       figure: shorCoverFig(),
-      lessons: ROADMAP.map(function (it) { return { num: it[0], title: it[1], desc: it[2], href: it[3] }; }),
+      lessons: ROADMAP.map(function (it) { return { num: it[0], title: it[1], desc: it[2], href: it[3], hw: it[4] }; }),
     });
     return null;
   }

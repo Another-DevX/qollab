@@ -122,7 +122,7 @@
     ["01", "Four Physical, Two Logical", "See how 16 physical states collapse to 4 code states.", "#/module-4/four-physical-two-logical"],
     ["02", "Detecting Quantum Errors", "Read the syndrome produced by a single error.", "#/module-4/detecting-errors"],
     ["03", "Why Can't We Correct Them?", "Detect an error and discover why its location is hidden.", "#/module-4/why-not-correct"],
-    ["04", "The Postselection Experiment", "Discard detected runs and measure what survives.", "#/module-4/postselection"],
+    ["04", "The Postselection Experiment", "Discard detected runs and measure what survives.", "#/module-4/postselection", true],
     ["05", "Break the Iceberg Code", "Find an undetectable logical error with two qubits.", "#/module-4/break-the-code"],
   ];
   function renderCover(root) {
@@ -138,7 +138,7 @@
       ctaHref: "#/module-4/four-physical-two-logical", ctaLabel: "Start Exploring \u2192",
       meta: "\u2248 15 min \u00b7 5 lessons, 1 challenge",
       figure: "<div class='cover-figure-panel'>" + registerSVG({}) + "</div>",
-      lessons: ROADMAP.map(function (it) { return { num: it[0], title: it[1], desc: it[2], href: it[3] }; }),
+      lessons: ROADMAP.map(function (it) { return { num: it[0], title: it[1], desc: it[2], href: it[3], hw: it[4] }; }),
     });
     return null;
   }

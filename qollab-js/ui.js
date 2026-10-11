@@ -57,6 +57,7 @@
       return "<li><a class='route-item' href='" + l.href + "'>" +
         "<span class='route-num'>" + l.num + "</span>" +
         "<span class='route-body'><span class='route-title'>" + l.title + "</span>" +
+        (l.hw ? "<span class='hw-badge' style='margin-top:6px' title='Runs a circuit on the Qollab backend you pick'><span class='dot2' aria-hidden='true'></span>Backend</span>" : "") +
         (l.desc ? "<span class='route-desc'>" + l.desc + "</span>" : "") + "</span>" +
         "<span class='route-arrow' aria-hidden='true'>&rarr;</span></a></li>";
     }).join("");

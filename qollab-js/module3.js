@@ -38,12 +38,12 @@
 
   var LESSONS = [
     { path: '/grid', num: '01', short: 'From a line to a grid', q: 'What if the repetition code grew in two directions?', render: renderGrid },
-    { path: '/stabilizers', num: '02', short: 'Stabilizers as tiles', q: 'Which tiles notice which errors?', render: renderStabilizers },
+    { path: '/stabilizers', num: '02', short: 'Stabilizers as tiles', q: 'Which tiles notice which errors?', render: renderStabilizers, hw: true },
     { path: '/strings', num: '03', short: 'Errors are strings, syndromes are endpoints', q: 'Why do only the ends of an error light up?', render: renderStrings },
     { path: '/decoder', num: '04', short: 'Be the decoder', q: 'Can you fix errors you cannot see?', render: renderDecoder },
     { path: '/logical', num: '05', short: 'The logical qubit', q: 'How many errors does it take to fool the code?', render: renderLogical },
-    { path: '/threshold', num: '06', short: 'The threshold', q: 'Does a bigger grid always help?', render: renderThreshold },
-    { path: '/lab', num: '07', short: 'Distance lab', q: 'How much does a bigger grid buy you?', render: renderLab },
+    { path: '/threshold', num: '06', short: 'The threshold', q: 'Does a bigger grid always help?', render: renderThreshold, hw: true },
+    { path: '/lab', num: '07', short: 'Distance lab', q: 'How much does a bigger grid buy you?', render: renderLab, hw: true },
     { path: '/conclusion', num: 'End', short: 'Conclusion', q: 'What did the grid teach us?', render: renderConclusion }
   ];
 
@@ -448,7 +448,7 @@
       ctaHref: BASE + "/grid", ctaLabel: "Start Experimenting \u2192",
       meta: "\u2248 20 min \u00b7 " + LESSONS.length + " lessons",
       figure: "<div class='cover-hero' id='hero'></div>",
-      lessons: LESSONS.map(function (l) { return { num: l.num, title: l.short, desc: l.q, href: BASE + l.path }; }),
+      lessons: LESSONS.map(function (l) { return { num: l.num, title: l.short, desc: l.q, href: BASE + l.path, hw: l.hw }; }),
     });
 
     var hero = page.querySelector('#hero');
@@ -1315,6 +1315,7 @@
       '<button class="btn" type="button" data-action="reset">Reset</button></div>' +
       '<div class="progressbar" aria-hidden="true"><div id="c-bar"></div></div>' +
       '<p class="small" id="c-progress" aria-live="polite"></p>' +
+      '<div id="c-aer-host" style="margin-top:18px"></div>' +
       '</div>' +
       '<div class="panel"><h3>Observations</h3><div id="c-obs" aria-live="polite"></div></div>' +
       '<div class="panel"><h3>Last trial</h3><div id="c-live" class="lat-host" style="max-width:260px"></div><p class="small" id="c-live-cap"></p></div>' +
@@ -1330,7 +1331,6 @@
       '<p>On real hardware, the measurement circuits themselves fail too, and the threshold drops to roughly 1%. In 2024 Google\'s “Willow” chip showed logical error rates decreasing from <span class="m">d</span> = 3 to 5 to 7 — the first clear demonstration of operating below threshold.</p>' +
       '<p>Everything here is a classical simulation in your browser (Pauli frames + matching), not a run on quantum hardware.</p></div></details>' +
       '</section>' +
-      '<section id="c-noise" style="margin-top:40px"></section>' +
       transitionBlock('The threshold exists. How much does each step in d actually buy?', '/lab', 'Open the distance lab');
 
     var slider = page.querySelector('#c-p');
@@ -1478,22 +1478,12 @@
       reset: function () { stop(); st.data[st.model] = {}; st.last = null; draw(); }
     });
 
-    function mountNoiseC() {
-      var host = page.querySelector('#c-noise');
-      host.innerHTML =
-        '<div class="page-head"><div class="meta"><span class="kick">On hardware · real noise</span></div>' +
-          '<h2 class="headline" style="font-size:1.6rem">Run the surface code with in-circuit noise</h2>' +
-          '<p class="dek" style="margin-top:8px">The circuit is a distance-d Z-check round. It runs on the Qollab backend you selected; on an ideal backend the noise channel is injected with Aer.</p></div>' +
-        '<div class="panel" style="margin-top:16px" id="c-noise-host"></div>';
-      surfaceNoisePanel(page, '#c-noise-host', {
-        p: function () { return st.p; },
-        channel: function () { return st.model === 'depolarizing' ? 'depol' : 'x'; },
-        distances: [3, 5, 7],
-      });
-    }
-
     draw();
-    mountNoiseC();
+    surfaceNoisePanel(page, '#c-aer-host', {
+      p: function () { return st.p; },
+      channel: function () { return st.model === 'depolarizing' ? 'depol' : 'x'; },
+      distances: [3, 5, 7],
+    });
     return function () { clearTimeout(timer); timer = null; };
   }
 
@@ -1560,6 +1550,7 @@
       '<button class="btn" type="button" data-action="reset">Reset</button></div>' +
       '<div class="progressbar" aria-hidden="true"><div id="m-bar"></div></div>' +
       '<p class="small" id="m-progress" aria-live="polite"></p>' +
+      '<div id="m-aer-host" style="margin-top:18px"></div>' +
       '</div>' +
       '<div class="panel"><h3>Readouts</h3><div id="m-read" aria-live="polite"></div></div>' +
       '<div class="panel"><h3>Observations</h3><div id="m-obs" aria-live="polite"></div></div>' +
@@ -1578,7 +1569,6 @@
       '<p>For even <span class="m">d</span>, ⌊(d−1)/2⌋ is the same as for <span class="m">d − 1</span>: <span class="m">d</span> = 4 still guarantees to fix only one error. The formula still gives it a curve in between.</p>' +
       '<p>This page samples the formula; it does not simulate qubits or run a decoder. Lesson 06 does both, locally in your browser.</p></div></details>' +
       '</section>' +
-      '<section id="m-noise" style="margin-top:40px"></section>' +
       transitionBlock('Ready to wrap up what the grid taught us?', '/conclusion', 'Conclusion');
 
     var slider = page.querySelector('#m-p');
@@ -1723,22 +1713,12 @@
       reset: function () { stop(); st.data = { 3: {}, 4: {}, 5: {} }; st.hits = null; draw(); }
     });
 
-    function mountNoiseM() {
-      var host = page.querySelector('#m-noise');
-      host.innerHTML =
-        '<div class="page-head"><div class="meta"><span class="kick">On hardware · real noise</span></div>' +
-          '<h2 class="headline" style="font-size:1.6rem">Run the surface code with in-circuit noise</h2>' +
-          '<p class="dek" style="margin-top:8px">The model above samples a formula. Here the distance-d Z-check circuit runs on the Qollab backend you selected (noise injected with Aer on an ideal backend) and is decoded.</p></div>' +
-        '<div class="panel" style="margin-top:16px" id="m-noise-host"></div>';
-      surfaceNoisePanel(page, '#m-noise-host', {
-        p: function () { return st.p; },
-        channel: function () { return 'x'; },
-        distances: [3, 5],
-      });
-    }
-
     draw();
-    mountNoiseM();
+    surfaceNoisePanel(page, '#m-aer-host', {
+      p: function () { return st.p; },
+      channel: function () { return 'x'; },
+      distances: [3, 5],
+    });
     return function () { clearTimeout(timer); timer = null; };
   }
 
