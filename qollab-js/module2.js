@@ -167,39 +167,44 @@
     ["06", "Breaking the Code", "Discover code distance and logical failures.", "#/module-2/break-code"],
     ["07", "Noise Laboratory", "Find out when error correction helps.", "#/module-2/noise-lab"],
   ];
+  function shorCoverFig() {
+    var bx = [24, 156, 288], w = 108, y = 60, h = 170, r = 22;
+    var names = [["q1", "q2", "q3"], ["q4", "q5", "q6"], ["q7", "q8", "q9"]];
+    var labels = ["Block A", "Block B", "Block C"];
+    var body = "";
+    for (var b = 0; b < 3; b++) {
+      var x = bx[b], cx = x + w / 2;
+      body += "<rect class='blk' x='" + x + "' y='" + y + "' width='" + w + "' height='" + h + "' rx='12'/>";
+      body += "<line class='link' x1='" + cx + "' y1='" + (y + 22) + "' x2='" + cx + "' y2='" + (y + h - 22) + "'/>";
+      body += "<text class='blk-label' x='" + cx + "' y='" + (y - 12) + "'>" + labels[b] + "</text>";
+      for (var k = 0; k < 3; k++) {
+        var cy = y + 38 + k * 47;
+        body += "<circle class='node' cx='" + cx + "' cy='" + cy + "' r='" + r + "'/>";
+        body += "<text class='q' x='" + cx + "' y='" + (cy + 5) + "'>" + names[b][k] + "</text>";
+      }
+    }
+    var eq = "<div class='cover-eq'><span class='m'>|G<sub>+</sub>&rang;<sup>&otimes;3</sup> = |G<sub>+</sub>&rang; &otimes; |G<sub>+</sub>&rang; &otimes; |G<sub>+</sub>&rang;</span></div>";
+    var svg = "<svg class='fig cover-svg cover-blocks' viewBox='0 0 420 252' role='img' aria-label='Shor code: three GHZ blocks, three physical qubits each'>" + body + "</svg>";
+    return eq + svg;
+  }
+
   function renderCover(root) {
-    var P = palette();
-    root.innerHTML =
-      "<div class='container'>" + backLink("#/", "All modules") +
-        "<div class='cover'>" +
-          "<div>" +
-            "<div style='display:flex;align-items:center;gap:12px'><span style='height:1px;width:40px;background:var(--accent)'></span><span class='eyebrow'>Module 2 — Quantum Error Correction</span></div>" +
-            "<h1 class='headline' style='margin-top:24px'>From Repetition to Shor Code</h1>" +
-            "<p class='sub'>How can we protect quantum information from errors?</p>" +
-            "<p class='dek' style='margin-top:16px'>A single physical qubit is fragile. But what if we could spread its information across several qubits?</p>" +
-            "<p class='dek' style='margin-top:12px'>In this module, you'll build quantum codes, detect hidden errors, and discover how nine physical qubits can protect one logical qubit.</p>" +
-            "<div class='cta'><a class='btn primary' href='#/module-2/repetition-code'>Start Experimenting →</a><span class='caption'>≈ 15 min · 7 lessons</span></div>" +
-          "</div>" +
-          "<div class='bloch-wrap' style='height:min(50vh,400px)'>" +
-            "<canvas id='cover-canvas' aria-label='Bloch sphere showing the state |+⟩'></canvas>" +
-            "<div class='legend'>" + legendHTML([{ c: P.original, t: "State |+⟩" }]) + "</div><div class='bloch-hint'>drag to orbit</div>" +
-          "</div>" +
-        "</div>" +
-        "<section aria-label='Module route' style='margin-top:64px'>" +
-          "<div style='display:flex;align-items:center;gap:16px'><span class='eyebrow' style='color:var(--faint)'>The route</span><span class='rule' style='flex:1'></span></div>" +
-          "<ol class='roadmap' style='margin-top:24px'>" +
-            ROADMAP.map(function (it) {
-              var inner = "<span class='n'>" + it[0] + "</span><div class='t'>" + it[1] + "</div><div class='l'>" + it[2] + "</div>";
-              return "<li>" + (it[3] ? "<a href='" + it[3] + "'>" + inner + "</a>" : "<div style='opacity:.72'>" + inner + "<div class='caption' style='margin-top:6px'>Coming soon</div></div>") + "</li>";
-            }).join("") +
-          "</ol>" +
-        "</section>" +
-      "</div>";
-    var sphere = new BlochSphere($sel("#cover-canvas", root));
-    var b = Q.blochVector(Q.KET["+"]);
-    sphere.setArrows([{ id: "s", color: P.original, vector: [b.x, b.y, b.z] }]);
-    sphere.start();
-    return function () { sphere.stop(); };
+    var UI = window.UI;
+    root.innerHTML = UI.moduleCover({
+      backHref: "#/", backLabel: "All modules",
+      label: "Module 2 — Quantum Error Correction",
+      title: "From Repetition to Shor Code",
+      sub: "How can we protect quantum information from errors?",
+      deks: [
+        "A single physical qubit is fragile. But what if we could spread its information across several qubits?",
+        "In this module, you\u2019ll build quantum codes, detect hidden errors, and discover how nine physical qubits can protect one logical qubit.",
+      ],
+      ctaHref: "#/module-2/repetition-code", ctaLabel: "Start Experimenting \u2192",
+      meta: "\u2248 15 min \u00b7 7 lessons",
+      figure: shorCoverFig(),
+      lessons: ROADMAP.map(function (it) { return { num: it[0], title: it[1], desc: it[2], href: it[3] }; }),
+    });
+    return null;
   }
 
   /* ==================================================================

@@ -359,7 +359,8 @@
   }
 
   /* ---------- Module covers (40/60 editorial layout) ---------- */
-  .cover-page{padding-top:clamp(16px,2.4vh,32px); padding-bottom:clamp(24px,4vh,56px)}
+  .cover-page{max-width:1040px; margin:0 auto; padding:clamp(16px,2.4vh,32px) 20px clamp(24px,4vh,56px)}
+  .m3 .cover-page--bare{max-width:none; margin:0; padding:0}
   .module-cover{display:grid; grid-template-columns:1fr; gap:clamp(26px,3.6vh,44px); align-items:center}
   @media (min-width:900px){ .module-cover{grid-template-columns:minmax(0,40fr) minmax(0,60fr); gap:clamp(36px,5vw,80px)} }
   .cover-intro{max-width:34rem}
@@ -367,11 +368,19 @@
   .cover-sub{margin-top:clamp(8px,1.2vh,12px); font-size:clamp(1.02rem,1.3vw,1.15rem); line-height:1.5; color:var(--muted)}
   .cover-dek{margin-top:clamp(8px,1.2vh,12px); max-width:52ch}
   .cover-cta{display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin-top:clamp(14px,2.2vh,22px)}
-  .cover-figure{margin:clamp(14px,2.4vh,26px) 0 0; display:flex; justify-content:center}
-  .cover-figure .bloch-wrap{height:clamp(180px,26vh,260px); width:100%; max-width:420px}
-  .cover-hero{width:100%; max-width:420px; margin:0 auto}
+  .cover-figure{margin:clamp(14px,2.4vh,26px) 0 0; display:flex; flex-direction:column; align-items:center}
+  .cover-figure .bloch-wrap{height:clamp(180px,26vh,260px); min-height:0; width:100%; max-width:420px}
+  .cover-hero{width:100%; max-width:280px; margin:0 auto}
   .cover-figure-panel{width:100%; max-width:400px; margin:0 auto}
   .cover-svg{width:100%; max-width:430px; height:auto; display:block}
+  /* Module 2 cover: three GHZ blocks (A/B/C), three physical qubits each. */
+  .cover-eq{margin-bottom:clamp(8px,1.4vh,14px); text-align:center}
+  .cover-eq .m{font-size:1.02rem; color:var(--ink)}
+  .cover-blocks .blk{fill:none; stroke:var(--accent-2); stroke-width:1.6}
+  .cover-blocks .node{fill:var(--surface-2); stroke:var(--accent-2); stroke-width:1.6}
+  .cover-blocks .link{stroke:var(--line); stroke-width:1.4}
+  .cover-blocks .q{fill:var(--ink); font-family:var(--mono); font-style:normal; font-size:13px; font-weight:600; text-anchor:middle}
+  .cover-blocks .blk-label{fill:var(--muted); font-family:var(--mono); font-style:normal; font-size:11px; letter-spacing:.12em; text-transform:uppercase; text-anchor:middle}
 
   .cover-route{min-width:0}
   .route-head{display:flex; align-items:center; gap:16px}
@@ -529,7 +538,7 @@
 
   max-width: 1040px;
   margin: 0 auto;
-  padding: 48px 20px 96px;
+  padding: 40px 20px 64px;
   color: var(--ink);
 }
 .m3.page { animation: qc-fade .4s ease both; }

@@ -69,26 +69,17 @@
 
   function renderM1Cover(root) {
     var pal = P();
-    root.innerHTML =
-      "<div class='container'>" +
-        UI.backLink("#/", "All modules") +
-        "<div class='cover'>" +
-          "<div>" +
-            "<div style='display:flex;align-items:center;gap:12px'><span style='height:1px;width:40px;background:var(--accent)'></span><span class='eyebrow'>Module 1 — Quantum Error Correction</span></div>" +
-            "<h1 class='headline' style='margin-top:24px'>Understanding quantum errors</h1>" +
-            "<p class='sub'>A qubit is fragile. To protect it, we first need to see how it fails.</p>" +
-            "<p class='dek' style='margin-top:16px'>Follow a single qubit across the Bloch sphere: how the Pauli errors X, Y and Z move it, why they form a complete basis, and how to identify the error behind a given outcome.</p>" +
-            "<div class='cta'><a class='btn primary' href='#/module-1/pauli-errors'>Start reading →</a><span class='caption'>≈ 10 min · 3 experiments, 1 challenge</span></div>" +
-          "</div>" +
-          blochBlock("m1-cover-canvas", [{ c: pal.original, t: "State |+i⟩" }], "min(50vh,400px)") +
-        "</div>" +
-        "<section aria-label='Module route' style='margin-top:64px'>" +
-          "<div style='display:flex;align-items:center;gap:16px'><span class='eyebrow' style='color:var(--faint)'>The route</span><span class='rule' style='flex:1'></span></div>" +
-          "<ol class='roadmap' style='margin-top:24px'>" +
-            M1_ROUTE.map(function (it) { return "<li><a href='" + it.href + "'><span class='n'>" + it.n + "</span><div class='t'>" + it.title + "</div><div class='l'>" + it.line + "</div></a></li>"; }).join("") +
-          "</ol>" +
-        "</section>" +
-      "</div>";
+    root.innerHTML = UI.moduleCover({
+      backHref: "#/", backLabel: "All modules",
+      label: "Module 1 — Quantum Error Correction",
+      title: "Understanding quantum errors",
+      sub: "A qubit is fragile. To protect it, we first need to see how it fails.",
+      deks: ["Follow a single qubit across the Bloch sphere: how the Pauli errors X, Y and Z move it, why they form a complete basis, and how to identify the error behind a given outcome."],
+      ctaHref: "#/module-1/pauli-errors", ctaLabel: "Start reading \u2192",
+      meta: "\u2248 10 min \u00b7 3 experiments, 1 challenge",
+      figure: blochBlock("m1-cover-canvas", [{ c: pal.original, t: "State |+i\u27e9" }]),
+      lessons: M1_ROUTE.map(function (it) { return { num: it.n, title: it.title, desc: it.line, href: it.href }; }),
+    });
     var sphere = new BlochSphere(UI.$sel("#m1-cover-canvas", root));
     var b = M.blochVector(M.KET_PLUS_I);
     sphere.setArrows([{ id: "s", color: pal.original, vector: [b.x, b.y, b.z] }]);
