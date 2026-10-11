@@ -28,7 +28,7 @@ imports = {
 }
 # circuits.js imports these bare Python modules; Qollab resolves them, the
 # static server does not, so point them all at a local stub.
-for model in ("bell", "repetition", "phase_flip", "shor", "surface", "iceberg"):
+for model in ("repetition", "shor", "surface", "iceberg"):
     imports["quantum." + model] = "./quantum-stub.js"
 
 inject = (

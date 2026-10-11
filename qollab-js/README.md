@@ -61,7 +61,7 @@ trayectorias y ejes de rotación.
 | `errorslab/` | Laboratorio de errores sistemáticos: `entry.js` (montaje) + `model/`, `ui/`, `views/` (three.js) + `i18n/`. |
 | `circuits.js` | Puente JS ↔ Python: `runModel(id, opts)` ejecuta un circuito de `quantum/*.py` en el backend. Expone `window.QollabCircuits`. |
 | `circuit-run.js` | Tarjeta compartida *Run on the backend*: botón + histograma de *counts*; importa `circuits.js` de forma perezosa y se desactiva fuera de Qollab. Expone `window.CircuitRun`. |
-| `quantum/*.py` | Circuitos Qiskit reales (`bell`, `repetition`, `phase_flip`, `shor`, `surface`, `iceberg`) + `common.py`. |
+| `quantum/*.py` | Circuitos Qiskit reales (`repetition`, `shor`, `surface`, `iceberg`) + `common.py`. |
 
 ## Honestidad sobre la simulación
 

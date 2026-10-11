@@ -13,17 +13,13 @@
  * `backend` is the pre-created backend Qollab injects into the entry point and
  * every JS file it imports (see the runtime docs).
  */
-import * as bell from 'quantum.bell';
 import * as repetition from 'quantum.repetition';
-import * as phase_flip from 'quantum.phase_flip';
 import * as shor from 'quantum.shor';
 import * as surface from 'quantum.surface';
 import * as iceberg from 'quantum.iceberg';
 
 export const MODELS = [
-  { id: 'bell', label: 'Bell state (baseline)', module: bell, qubits: 2 },
   { id: 'repetition', label: 'Bit-flip code [[3,1,3]]', module: repetition, qubits: 5 },
-  { id: 'phase_flip', label: 'Phase-flip code [[3,1,3]]', module: phase_flip, qubits: 5 },
   { id: 'shor', label: 'Shor code [[9,1,3]] (detection)', module: shor, qubits: 17 },
   { id: 'surface', label: 'Surface code d = 3 (Z-checks)', module: surface, qubits: 13 },
   { id: 'iceberg', label: 'Iceberg code [[4,2,2]] (detection)', module: iceberg, qubits: 6 },

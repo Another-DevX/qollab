@@ -23,13 +23,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "qol
 
 from qiskit_aer import AerSimulator  # noqa: E402
 
-from quantum import bell, iceberg, phase_flip, repetition, shor, surface  # noqa: E402
+from quantum import iceberg, repetition, shor, surface  # noqa: E402
 
 # id -> (module, run() options). One representative error per code.
 CASES = [
-    ("bell", bell, {}),
     ("repetition", repetition, {"errorQubit": 1, "errorPauli": "X"}),
-    ("phase_flip", phase_flip, {"errorQubit": 1, "errorPauli": "Z"}),
     ("shor", shor, {"errorQubit": 0, "errorPauli": "X"}),
     ("surface", surface, {"errorQubit": 4, "errorPauli": "X"}),
     ("iceberg", iceberg, {"errorQubit": 0, "errorPauli": "X"}),
