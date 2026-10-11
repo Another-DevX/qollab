@@ -164,6 +164,20 @@
       "<span class='dot2' aria-hidden='true'></span>" + esc(label || "Backend job") + "</span>";
   }
 
+  /* One line describing where a run happened (backend job, or local fallback). */
+  function runLine(res) {
+    if (res.mode === "backend") {
+      return "<p class='caption' style='margin-top:8px'>Ran on the Qollab backend" +
+        (res.backend ? " (" + esc(res.backend) + ")" : "") + " · device noise model.</p>";
+    }
+    if (res.mode === "local") {
+      return "<div class='notice' style='margin-top:8px'><p><b>Local simulation.</b> " +
+        esc(res.note || "This circuit does not fit on the backend, so it was simulated locally, not on hardware.") + "</p></div>";
+    }
+    return "<p class='caption' style='margin-top:8px'>Ran on the Qollab backend" +
+      (res.backend ? " (" + esc(res.backend) + ")" : "") + " · ideal circuit, noise injected classically.</p>";
+  }
+
   /**
    * Mount a "run the circuit with in-circuit noise" card.
    *
@@ -279,6 +293,7 @@
     backendHasNoise: backendHasNoise,
     backendName: backendName,
     hwBadge: hwBadge,
+    runLine: runLine,
     barsHTML: barsHTML,
     summaryLine: summaryLine,
   };

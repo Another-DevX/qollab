@@ -1220,8 +1220,7 @@
         status.textContent = res.shots + ' shots · d = ' + state.d + ' · ' + channel + ' @ p = ' + res.p + (res.backend ? ' · ' + res.backend : '');
         out.innerHTML =
           '<div class="notice" style="margin-top:12px"><p><b>Protected:</b> ' + res.protected + ' · <span class="m">d</span> = ' + state.d + '</p></div>' +
-          '<p class="caption" style="margin-top:8px">Ran on the Qollab backend' + (res.backend ? ' (' + res.backend + ')' : '') + ' · ' +
-            (res.mode === 'backend' ? 'device noise model' : 'ideal circuit, noise injected classically') + '.</p>' +
+          window.CircuitRun.runLine(res) +
           '<div class="grid-two" style="margin-top:12px">' +
             '<div><div class="caption">' + (res.mode === 'backend' ? 'Noise-free reference (Aer)' : 'Noise-free circuit (Qollab)') + ' · detected ' + Math.round(100 * res.ideal.detected) + '%</div>' + window.CircuitRun.barsHTML(res.ideal.counts, 4) + '</div>' +
             '<div><div class="caption">' + (res.mode === 'backend' ? 'Noisy circuit (device)' : 'Noisy circuit (injected)') + ' · detected ' + Math.round(100 * res.noisy.detected) + '%</div>' + window.CircuitRun.barsHTML(res.noisy.counts, 4) + '</div>' +

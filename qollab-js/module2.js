@@ -1404,15 +1404,14 @@
             "<button class='chip" + (nl.correction ? " active" : "") + "' data-nlc='on'>Enabled</button>" +
             "<button class='chip" + (!nl.correction ? " active" : "") + "' data-nlc='off'>Disabled</button></div>" +
           "<p class='caption' style='margin-top:8px'>Disabled means no syndrome-based recovery is applied: the residual is the raw physical error.</p>" +
-          "<div class='toolbar' style='margin-top:14px'><button class='btn primary' id='nl-run'>Run simulation</button><button class='btn' id='nl-aer-run'>Run on a backend (in-circuit noise)</button>" + CircuitRun.hwBadge() + "</div>" +
+          "<div class='toolbar' style='margin-top:14px'><button class='btn primary' id='nl-run'>Run simulation</button>" + CircuitRun.hwBadge() + "</div>" +
           (nl.mc ? "<p class='caption' style='margin-top:10px'>Sampled with " + nl.trials.toLocaleString() + " trials — a statistical estimate.</p>" : "") +
         "</div>";
       $all("#nl-controls [data-nlm]", root).forEach(function (el) { el.addEventListener("click", function () { nl.model = el.getAttribute("data-nlm"); nl.mc = null; update(); }); });
       $all("#nl-controls [data-nlt]", root).forEach(function (el) { el.addEventListener("click", function () { nl.trials = Number(el.getAttribute("data-nlt")); update(); }); });
       $all("#nl-controls [data-nlc]", root).forEach(function (el) { el.addEventListener("click", function () { nl.correction = el.getAttribute("data-nlc") === "on"; nl.mc = null; update(); }); });
       var slider = $sel("#nl-p", root); if (slider) slider.addEventListener("input", function () { nl.p = Number(slider.value); update(); });
-      $sel("#nl-run", root).addEventListener("click", function () { nl.mc = systems().map(function (s) { return { key: s.key, value: Noise.monteCarlo(s.code, nl.model, nl.p, s.correction, nl.trials, Math.random) }; }); update(); });
-      $sel("#nl-aer-run", root).addEventListener("click", runAerExperiment);
+      $sel("#nl-run", root).addEventListener("click", function () { nl.mc = systems().map(function (s) { return { key: s.key, value: Noise.monteCarlo(s.code, nl.model, nl.p, s.correction, nl.trials, Math.random) }; }); update(); runAerExperiment(); });
       updateSummary();
     }
     function updateSummary() {
@@ -1491,7 +1490,7 @@
      * Aer; on a noise-model backend we use the backend as is. */
     function runAerExperiment() {
       var out = $sel("#nl-aer-out", root);
-      var btn = $sel("#nl-aer-run", root);
+      var btn = $sel("#nl-run", root);
       if (!CircuitRun.available()) {
         out.innerHTML = "<div class='notice'><p>Run inside Qollab to execute this circuit on a backend.</p></div>";
         return;
@@ -1503,8 +1502,7 @@
         var fixed = Noise.exactPL(Noise.CODES.shor, res.channel, res.p, true);
         out.innerHTML =
           "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> " + res.protected + "</p></div>" +
-          "<p class='caption' style='margin-top:8px'>Ran on the Qollab backend" + (res.backend ? " (" + res.backend + ")" : "") + " · " +
-            (res.mode === "backend" ? "device noise model" : "ideal circuit, noise injected classically") + ".</p>" +
+          CircuitRun.runLine(res) +
           "<div class='grid-two' style='margin-top:12px'>" +
             "<div><div class='caption'>" + (res.mode === "backend" ? "Noise-free reference (Aer)" : "Noise-free circuit (Qollab)") + " · detected " + Math.round(100 * res.ideal.detected) + "%</div>" + CircuitRun.barsHTML(res.ideal.counts, 4) + "</div>" +
             "<div><div class='caption'>" + (res.mode === "backend" ? "Noisy circuit (device)" : "Noisy circuit (injected)") + " · detected " + Math.round(100 * res.noisy.detected) + "%</div>" + CircuitRun.barsHTML(res.noisy.counts, 4) + "</div>" +

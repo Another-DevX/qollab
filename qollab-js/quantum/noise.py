@@ -166,15 +166,21 @@ def run(backend, params_json="{}"):
         d = 3
 
     qc = _build(model_id, d, error_qubit, error_pauli)
+    n_q = qc.num_qubits if qc is not None else 0
 
     try:
         backend_name = str(getattr(backend, "name", "") or "")
     except Exception:  # noqa: BLE001
         backend_name = ""
+    try:
+        backend_qubits = int(getattr(backend, "num_qubits", 0) or 0)
+    except Exception:  # noqa: BLE001
+        backend_qubits = 0
 
-    # Ideal distribution: a real job on the Qollab backend (noise-free on an
-    # ideal backend, the device noise model on an IBM/IonQ backend).
-    if backend is not None and qc is not None:
+    # A real job only if the backend can hold the circuit (the built-in simulator
+    # tops out at 24 qubits). Otherwise the whole run is local.
+    fits = backend is not None and qc is not None and (backend_qubits == 0 or n_q <= backend_qubits)
+    if fits:
         ideal = run_circuit(backend, qc, shots)
         ideal = {str(k): int(v) for k, v in ideal.items()}
         mode = "backend"
@@ -182,11 +188,14 @@ def run(backend, params_json="{}"):
         ideal = _classical_counts(model_id, d, "x", 0.0, shots, random.Random(0))
         mode = "local"
 
-    # Noisy distribution: the chosen channel, applied classically.
+    note = None
+    if not fits and backend is not None and backend_qubits:
+        note = ("This circuit needs " + str(n_q) + " qubits, more than the backend's " +
+                str(backend_qubits) + " — simulated locally, not on hardware.")
+
     noisy = _classical_counts(model_id, d, channel, p, shots, random.Random())
 
     detect = spec["detector"]
-    qubits = qc.num_qubits if qc is not None else 0
     return json.dumps({
         "model": model_id,
         "title": spec["title"] + (" · d = " + str(d) if model_id == "surface" else ""),
@@ -196,7 +205,10 @@ def run(backend, params_json="{}"):
         "d": d,
         "mode": mode,
         "backend": backend_name,
-        "qubits": qubits,
+        "backend_qubits": backend_qubits,
+        "qubits": n_q,
+        "needs_local": not fits,
+        "note": note,
         "shots": shots,
         "ideal": {"counts": ideal, "detected": probability(ideal, detect)},
         "noisy": {"counts": noisy, "detected": probability(noisy, detect)},
