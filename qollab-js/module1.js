@@ -231,7 +231,9 @@
         UI.backLink("#/module-1/pauli-errors", "Pauli errors") +
         UI.pageHead("02", "Pauli basis", "Four matrices are enough", "Any single-qubit operator is a combination of I, X, Y and Z.") +
         "<div class='grid-two' style='margin-top:32px;align-items:center'>" +
-          UI.eq(mx("E = a I + b X + c Y + d Z, &nbsp; a, b, c, d ∈ ℂ")) +
+          "<div>" + UI.eq(mx("E = a I + b X + c Y + d Z, &nbsp; a, b, c, d ∈ ℂ")) +
+            "<p class='dek' style='margin-top:12px'>Here, " + mx("E") + " represents a quantum error operator acting on a single qubit. Even though quantum errors can take infinitely many forms, any such operator can be written as a linear combination of " + mx("I") + ", " + mx("X") + ", " + mx("Y") + ", and " + mx("Z") + ".</p>" +
+          "</div>" +
           "<div class='grid2'>" + ["I", "X", "Y", "Z"].map(function (n) { return "<div class='quiet' style='display:flex;align-items:center;justify-content:center;min-height:64px'>" + UI.matrixHTML(M.PAULI_MATRICES[n], { label: n + " =", digits: 0, highlight: true, accent: pal.original }) + "</div>"; }).join("") + "</div>" +
         "</div>" +
         "<div class='grid3' style='margin-top:40px'>" + COMPARISON.map(function (b) { return "<div class='cmpblock'><p class='ct'>" + b.title + "</p><div class='eqbox'>" + mx(b.tex) + "</div><p class='cl'>" + b.line + "</p></div>"; }).join("") + "</div>" +
