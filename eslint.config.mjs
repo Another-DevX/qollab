@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Entrega estática autónoma (HTML + JS puro, sin bundler):
+    "submission/**",
   ]),
 ]);
 

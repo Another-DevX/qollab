@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Qollab · Entendiendo los errores cuánticos</title>
+<meta name="description" content="Módulo interactivo de corrección de errores cuánticos: errores de Pauli, la base de Pauli y un reto para identificarlos sobre la esfera de Bloch." />
+<style>
+  :root{
+    --ink:#e9edf7; --muted:#9aa3b8; --faint:#66708a;
+    --surface:#070912; --surface-2:#0d1120; --surface-3:#141a2b; --line:#232c40;
+    --accent:#56e1ff; --accent-2:#ff6fb5; --amber:#ffc857; --good:#4ade80; --bad:#f87171;
+    --axis-x:#ff6b6b; --axis-y:#5ee9a3; --axis-z:#7f9dff;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; min-height:100vh; background-color:var(--surface); color:var(--ink);
+    font-family:var(--sans); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    background-image:
+      radial-gradient(60rem 40rem at 12% -10%, rgba(86,225,255,.09), transparent 60%),
+      radial-gradient(50rem 34rem at 92% 4%, rgba(255,111,181,.08), transparent 62%),
+      radial-gradient(46rem 40rem at 50% 120%, rgba(127,157,255,.07), transparent 60%);
+    background-attachment:fixed;
+    display:flex; flex-direction:column; min-height:100vh;
+  }
+  ::selection{background:rgba(86,225,255,.35); color:#fff}
+  a{color:inherit}
+  .mono{font-family:var(--mono)}
+  .muted{color:var(--muted)}
+  .faint{color:var(--faint)}
+
+  /* ---------- Header ---------- */
+  header.site{
+    position:sticky; top:0; z-index:50; border-bottom:1px solid var(--line);
+    background:rgba(7,9,18,.82); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  }
+  .header-inner{max-width:1120px; margin:0 auto; height:64px; padding:0 16px; display:flex; align-items:center; gap:16px}
+  .brand{display:flex; align-items:center; gap:10px; text-decoration:none; flex:0 0 auto}
+  .brand-mark{position:relative; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center}
+  .brand-mark .ring{position:absolute; inset:0; border-radius:50%; border:1px solid rgba(86,225,255,.5)}
+  .brand-mark .ring2{position:absolute; inset:0; border-radius:50%; border:1px solid rgba(255,111,181,.4); transform:rotateX(65deg)}
+  .brand-mark .core{width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 12px var(--accent)}
+  .brand-text{display:flex; flex-direction:column; line-height:1}
+  .brand-text b{font-size:14px; letter-spacing:-.01em}
+  .brand-text span{font-size:10px; text-transform:uppercase; letter-spacing:.18em; color:var(--faint)}
+  nav.main{margin-left:auto; display:flex; align-items:center; gap:4px; overflow-x:auto}
+  nav.main a{
+    display:flex; align-items:center; gap:6px; padding:8px 10px; border-radius:9px;
+    font-size:13px; text-decoration:none; color:var(--muted); white-space:nowrap; transition:.15s;
+  }
+  nav.main a:hover{background:rgba(255,255,255,.05); color:var(--ink)}
+  nav.main a.active{background:rgba(86,225,255,.12); color:var(--accent)}
+  nav.main a .idx{width:20px; height:20px; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line); border-radius:6px; font-family:var(--mono); font-size:10px}
+  nav.main a.active .idx{border-color:rgba(86,225,255,.6)}
+  nav.main a .lbl{display:none}
+  @media (min-width:640px){ nav.main a .lbl{display:inline} }
+
+  /* ---------- Layout ---------- */
+  main{flex:1}
+  .container{max-width:1120px; margin:0 auto; padding:40px 16px 64px}
+  footer.site{border-top:1px solid var(--line); font-size:12px; color:var(--faint)}
+  .footer-inner{max-width:1120px; margin:0 auto; padding:24px 16px; display:flex; flex-wrap:wrap; gap:8px; justify-content:space-between}
+  .footer-inner .mono{font-size:11px}
+
+  h1,h2,h3{margin:0}
+  .eyebrow{font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:.25em; color:var(--accent); margin:0 0 8px}
+  .title{font-size:clamp(28px,4vw,40px); font-weight:600; letter-spacing:-.02em; line-height:1.1; text-wrap:balance}
+  .lead{margin-top:12px; font-size:16px; line-height:1.65; color:var(--muted); max-width:62ch}
+  .prose{font-size:15px; line-height:1.7; color:var(--muted); max-width:62ch}
+  .prose strong{color:var(--ink); font-weight:600}
+
+  /* ---------- Panels / cards ---------- */
+  .panel{
+    border:1px solid var(--line); border-radius:16px; padding:18px;
+    background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.01)), var(--surface-2);
+  }
+  .panel h2{margin:0 0 12px; font-size:14px; font-weight:600}
+  .grid-2{display:grid; gap:22px; grid-template-columns:1fr}
+  @media (min-width:960px){ .grid-2{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)} }
+  .stack{display:flex; flex-direction:column; gap:18px}
+  .cards{display:grid; gap:14px; grid-template-columns:1fr}
+  @media (min-width:760px){ .cards{grid-template-columns:repeat(3,1fr)} }
+  .card{
+    display:flex; flex-direction:column; gap:10px; padding:20px; border:1px solid var(--line);
+    border-radius:16px; background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.01)), var(--surface-2);
+    text-decoration:none; transition:.18s; cursor:pointer;
+  }
+  .card:hover{transform:translateY(-2px); border-color:rgba(86,225,255,.4)}
+
+  /* ---------- Buttons / chips ---------- */
+  button{font-family:inherit}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px; height:40px; padding:0 16px;
+    border-radius:12px; border:1px solid var(--line); background:var(--surface-3); color:var(--ink);
+    font-size:14px; font-weight:500; cursor:pointer; transition:.15s;
+  }
+  .btn:hover{border-color:rgba(86,225,255,.6)}
+  .btn.primary{background:var(--accent); color:#04121a; border-color:transparent; font-weight:600}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.ghost{background:transparent; border-color:transparent; color:var(--muted)}
+  .btn.ghost:hover{background:rgba(255,255,255,.05); color:var(--ink)}
+  .btn:disabled{opacity:.45; cursor:default}
+  .btn:focus-visible, .chip:focus-visible, a:focus-visible{outline:2px solid rgba(86,225,255,.6); outline-offset:2px}
+  .chip{
+    display:inline-flex; align-items:center; justify-content:center; padding:8px 12px; border-radius:10px;
+    border:1px solid var(--line); background:rgba(20,26,43,.6); color:var(--muted);
+    font-family:var(--mono); font-size:14px; cursor:pointer; transition:.15s;
+  }
+  .chip:hover{border-color:rgba(86,225,255,.45); color:var(--ink)}
+  .chip.active{border-color:rgba(86,225,255,.7); background:rgba(86,225,255,.12); color:var(--accent); box-shadow:0 0 20px -8px var(--accent)}
+  .chip-row{display:flex; flex-wrap:wrap; gap:8px}
+
+  .err-btn{
+    display:flex; flex-direction:column; align-items:center; gap:4px; padding:14px 6px; border-radius:12px;
+    border:1px solid var(--line); background:rgba(20,26,43,.6); cursor:pointer; transition:.15s;
+  }
+  .err-btn:hover{border-color:rgba(86,225,255,.5)}
+  .err-btn .sym{font-family:var(--mono); font-size:26px; font-weight:600}
+  .err-btn .sub{font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--faint)}
+  .err-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+
+  .answer{
+    display:flex; flex-direction:column; align-items:center; gap:3px; padding:12px 4px; border-radius:12px;
+    border:1px solid var(--line); background:rgba(20,26,43,.6); cursor:pointer; font-family:var(--mono); transition:.15s;
+  }
+  .answer .sym{font-size:24px; font-weight:600}
+  .answer .sub{font-size:10px; text-transform:uppercase; letter-spacing:.06em; opacity:.7}
+  .answer:disabled{cursor:default}
+  .answer.correct{border-color:rgba(74,222,128,.7); background:rgba(74,222,128,.15); color:var(--good)}
+  .answer.wrong{border-color:rgba(248,113,113,.7); background:rgba(248,113,113,.15); color:var(--bad)}
+  .answer.dim{opacity:.55}
+  .answers{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
+
+  /* ---------- Bloch canvas ---------- */
+  .bloch-wrap{
+    position:relative; width:100%; height:min(62vh,560px); min-height:360px;
+    border:1px solid var(--line); border-radius:18px; overflow:hidden; background:var(--surface-2);
+  }
+  .bloch-wrap canvas{display:block; width:100%; height:100%; touch-action:none; cursor:grab}
+  .bloch-wrap canvas:active{cursor:grabbing}
+  .bloch-legend{position:absolute; left:12px; top:12px; display:flex; flex-wrap:wrap; gap:8px; pointer-events:none; z-index:2}
+  .legend-item{display:inline-flex; align-items:center; gap:8px; padding:4px 12px; border-radius:999px;
+    border:1px solid var(--line); background:rgba(7,9,18,.7); backdrop-filter:blur(6px); font-size:12px; color:var(--muted)}
+  .legend-item .dot{width:10px; height:10px; border-radius:50%}
+  .bloch-hint{position:absolute; right:12px; bottom:12px; z-index:2; font-size:10px; text-transform:uppercase;
+    letter-spacing:.18em; color:var(--faint); border:1px solid var(--line); border-radius:999px;
+    padding:4px 12px; background:rgba(7,9,18,.7); backdrop-filter:blur(6px); pointer-events:none}
+  @media (min-width:960px){ .sticky-col{position:sticky; top:88px} }
+
+  /* ---------- Sliders ---------- */
+  .slider{width:100%}
+  .slider-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:4px}
+  .slider-head label{font-size:12px; color:var(--muted)}
+  .slider-head .val{font-family:var(--mono); font-size:12px; color:var(--accent)}
+  input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:24px; background:transparent; cursor:pointer}
+  input[type=range]::-webkit-slider-runnable-track{height:6px; border-radius:999px;
+    background:linear-gradient(to right, var(--accent) 0%, var(--accent) var(--p,50%), #222b40 var(--p,50%), #222b40 100%)}
+  input[type=range]::-moz-range-track{height:6px; border-radius:999px; background:#222b40}
+  input[type=range]::-moz-range-progress{height:6px; border-radius:999px; background:var(--accent)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; margin-top:-6px;
+    width:17px; height:17px; border-radius:50%; background:#eaf6ff; border:2px solid var(--accent);
+    box-shadow:0 0 0 4px rgba(86,225,255,.12)}
+  input[type=range]::-moz-range-thumb{width:17px; height:17px; border:2px solid var(--accent); border-radius:50%; background:#eaf6ff}
+
+  /* ---------- Matrix / readout ---------- */
+  .matrix{display:flex; align-items:center; gap:10px; font-family:var(--mono)}
+  .matrix .cap{font-size:10px; text-transform:uppercase; letter-spacing:.16em; color:var(--faint)}
+  .matrix-body{display:flex; align-items:stretch; gap:8px}
+  .bracket{width:7px; border-top:2px solid rgba(154,163,184,.6); border-bottom:2px solid rgba(154,163,184,.6); border-radius:3px}
+  .bracket.left{border-left:2px solid rgba(154,163,184,.6)}
+  .bracket.right{border-right:2px solid rgba(154,163,184,.6)}
+  .matrix-grid{display:grid; grid-template-columns:1fr 1fr; gap:4px 20px; padding:6px 2px; font-size:14px; text-align:center}
+  .matrix-grid .nz{text-shadow:0 0 14px currentColor}
+  .readout{border:1px solid var(--line); border-radius:12px; padding:12px; background:rgba(20,26,43,.4)}
+  .readout-title{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; margin-bottom:6px}
+  .readout-title .dot{width:10px; height:10px; border-radius:50%}
+  .kv{display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding:6px 0; border-bottom:1px solid rgba(35,44,64,.6)}
+  .kv:last-child{border-bottom:0}
+  .kv span{font-size:12px; color:var(--faint)}
+  .kv b{font-family:var(--mono); font-size:13px; font-weight:500; text-align:right}
+  .coef-box{border:1px solid var(--line); border-radius:12px; padding:14px; background:rgba(7,9,18,.5); font-family:var(--mono); font-size:14px; line-height:1.9}
+  .coef-box .label{color:var(--faint)}
+
+  /* ---------- Callouts / notes ---------- */
+  .note{border:1px solid var(--line); border-radius:12px; padding:14px 16px; font-size:14px; line-height:1.65; color:var(--ink); background:rgba(255,255,255,.02)}
+  .note .tag{display:block; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.16em; color:var(--faint); margin-bottom:6px}
+  .note.info{border-color:rgba(86,225,255,.3); background:rgba(86,225,255,.06)}
+  .note.insight{border-color:rgba(255,111,181,.3); background:rgba(255,111,181,.06)}
+  .note.warn{border-color:rgba(255,200,87,.3); background:rgba(255,200,87,.07)}
+  .note.good{border-color:rgba(74,222,128,.3); background:rgba(74,222,128,.07)}
+  .notes{display:grid; gap:14px}
+  @media (min-width:760px){ .notes.two{grid-template-columns:1fr 1fr} }
+
+  .equation{margin:16px 0; padding:14px 16px; border:1px solid var(--line); border-radius:12px;
+    background:rgba(7,9,18,.6); font-family:var(--mono); font-size:14px; overflow-x:auto}
+  .eq-inline{font-family:var(--mono); color:var(--accent)}
+  .basis-grid{display:grid; gap:14px; grid-template-columns:repeat(2,1fr)}
+  @media (min-width:760px){ .basis-grid{grid-template-columns:repeat(4,1fr)} }
+  .basis-card{display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px; text-align:center}
+  .basis-card small{font-size:11px; color:var(--faint); line-height:1.4}
+
+  .stats{display:grid; gap:14px; grid-template-columns:1fr}
+  @media (min-width:620px){ .stats{grid-template-columns:repeat(3,1fr)} }
+  .stat{border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:rgba(20,26,43,.5)}
+  .stat .k{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.16em; color:var(--faint)}
+  .stat .v{font-family:var(--mono); font-size:20px; font-weight:600; margin-top:4px}
+  .stat .h{font-size:11px; color:var(--faint)}
+
+  .hero{display:grid; gap:32px; grid-template-columns:1fr; align-items:center}
+  @media (min-width:960px){ .hero{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)} }
+  .pill{display:inline-flex; align-items:center; gap:8px; padding:4px 12px; border-radius:999px; border:1px solid var(--line);
+    background:rgba(13,17,32,.7); font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.18em; color:var(--accent)}
+  .grad{background:linear-gradient(90deg,var(--accent),var(--accent-2)); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .cta{display:flex; flex-wrap:wrap; gap:12px}
+  .section-title{font-family:var(--mono); font-size:13px; text-transform:uppercase; letter-spacing:.25em; color:var(--faint); margin:56px 0 20px}
+  ul.check{list-style:none; padding:0; margin:0; display:grid; gap:8px}
+  ul.check li{display:flex; gap:10px; font-size:14px; color:var(--muted); line-height:1.6}
+  ul.check li::before{content:"·"; color:var(--accent); font-weight:700}
+  .loading{display:flex; align-items:center; justify-content:center; height:100%; color:var(--faint); font-size:13px}
+  .skeleton{height:100%; display:flex; align-items:center; justify-content:center; color:var(--faint); font-size:13px}
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important} html{scroll-behavior:auto} }
+</style>
+</head>
+<body>
+  <header class="site">
+    <div class="header-inner">
+      <a class="brand" href="#/" aria-label="Qollab, inicio">
+        <span class="brand-mark"><span class="ring"></span><span class="ring2"></span><span class="core"></span></span>
+        <span class="brand-text"><b>Qollab</b><span>QEC interactivo</span></span>
+      </a>
+      <nav class="main" aria-label="Secciones del módulo">
+        <a href="#/" data-route="/"><span class="idx">◇</span><span class="lbl">Inicio</span></a>
+        <a href="#/errores" data-route="/errores"><span class="idx">1</span><span class="lbl">Errores de Pauli</span></a>
+        <a href="#/base" data-route="/base"><span class="idx">2</span><span class="lbl">Base de Pauli</span></a>
+        <a href="#/reto" data-route="/reto"><span class="idx">3</span><span class="lbl">Reto</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="app"></main>
+
+  <footer class="site">
+    <div class="footer-inner">
+      <span>Qollab · Módulo 1 — Entendiendo los errores cuánticos.</span>
+      <span class="mono">HTML + JS sin dependencias · esfera de Bloch dibujada con Canvas 2D</span>
+    </div>
+  </footer>
+
+  <noscript>
+    <div class="container"><div class="note warn">Este módulo necesita JavaScript para dibujar la esfera de Bloch y calcular las transformaciones cuánticas.</div></div>
+  </noscript>
+
+  <script src="main.js" defer></script>
+</body>
+</html>
