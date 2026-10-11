@@ -47,3 +47,13 @@ import './errorslab/entry.js';
 
 /* --- Router, header and theme (must be last) ------------------------------ */
 import './app.js';
+
+/*
+ * Keep the run alive. Qollab tears down the runtime — and its authenticated
+ * backend — as soon as this top-level entry script finishes, so a circuit
+ * submitted later (from a "Run on the backend" button) would fail with
+ * "IonQAPIError: Unauthorized" (401). Holding the run open keeps `backend`
+ * and Pyodide available until the user presses Stop, exactly as the working
+ * Qollab projects do.
+ */
+await new Promise(() => {});
