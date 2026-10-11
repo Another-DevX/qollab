@@ -51,7 +51,11 @@ export async function runModel(id, { shots = 1024, errorQubit = null, errorPauli
   if (typeof backend === 'undefined') {
     throw new Error('No backend available: run this project inside Qollab.');
   }
-  const proxy = await model.module.run.callPromising(backend, shots, errorQubit, errorPauli);
+  // One JSON string, not loose args: Pyodide wraps some JS values (JS null
+  // arrives as JsNull, not Python None), so the JSON round-trip keeps the
+  // Python side plain (dict/None/int).
+  const params = JSON.stringify({ shots, errorQubit, errorPauli });
+  const proxy = await model.module.run.callPromising(backend, params);
   let text;
   try {
     text = typeof proxy === 'string' ? proxy : proxy.toString();

@@ -9,6 +9,28 @@ import json
 DEFAULT_SHOTS = 1024
 
 
+def parse_options(params_json="{}"):
+    """Read the run options from the JSON string the JS side sends.
+
+    The bridge passes one JSON string, not loose arguments: Pyodide wraps some
+    JS values (e.g. ``null`` arrives as ``JsNull``, not Python ``None``), so a
+    JSON round-trip gives us plain ``dict``/``None``/``int`` values.
+
+    Returns ``(shots, error_qubit, error_pauli)``.
+    """
+    try:
+        p = json.loads(params_json or "{}")
+    except (TypeError, ValueError):
+        p = {}
+    if not isinstance(p, dict):
+        p = {}
+    shots = int(p.get("shots") or DEFAULT_SHOTS)
+    eq = p.get("errorQubit", None)
+    error_qubit = None if eq is None else int(eq)
+    error_pauli = str(p.get("errorPauli") or "X")
+    return shots, error_qubit, error_pauli
+
+
 def run_circuit(backend, circuit, shots=DEFAULT_SHOTS):
     """Submit exactly one job and return plain ``{bitstring: count}``.
 

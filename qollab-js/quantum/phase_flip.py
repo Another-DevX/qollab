@@ -18,7 +18,7 @@ flipped bit, and the syndrome is decoded classically.
 
 from qiskit import QuantumCircuit
 
-from .common import DEFAULT_SHOTS, apply_pauli, bits_of, response, run_circuit
+from .common import apply_pauli, bits_of, parse_options, response, run_circuit
 
 MODEL = "phase_flip"
 TITLE = "Phase-flip code [[3,1,3]]"
@@ -27,7 +27,8 @@ QUBITS = 5  # q0 q1 q2 a0 a1
 DIAGNOSIS = {(1, 0): 0, (1, 1): 1, (0, 1): 2, (0, 0): None}
 
 
-def run(backend, shots=DEFAULT_SHOTS, error_qubit=None, error_pauli="Z"):
+def run(backend, params_json="{}"):
+    shots, error_qubit, error_pauli = parse_options(params_json)
     qc = QuantumCircuit(QUBITS, QUBITS)
     qc.h(0)  # prepare |0>_L = |+++>
     qc.h(1)

@@ -19,7 +19,7 @@ a properly prepared logical state) are intentionally left out.
 
 from qiskit import QuantumCircuit
 
-from .common import DEFAULT_SHOTS, apply_pauli, probability, response, run_circuit
+from .common import apply_pauli, parse_options, probability, response, run_circuit
 
 MODEL = "surface"
 TITLE = "Surface code d = 3 (Z-checks, detects X errors)"
@@ -48,7 +48,8 @@ def _z_checks(d):
     return checks
 
 
-def run(backend, shots=DEFAULT_SHOTS, error_qubit=None, error_pauli="X"):
+def run(backend, params_json="{}"):
+    shots, error_qubit, error_pauli = parse_options(params_json)
     checks = _z_checks(DISTANCE)
     qc = QuantumCircuit(QUBITS, len(checks))
     if error_qubit is not None:

@@ -47,10 +47,12 @@ stub = '''\
 // Only used by preview.sh; Qollab resolves the real modules itself.
 window.backend = window.backend || { name: "local-preview" };
 
-function fake(model, shots, errorQubit, errorPauli) {
+export function run(backend, params) {
+  const p = typeof params === "string" ? JSON.parse(params) : (params || {});
+  const shots = p.shots || 1024;
   const half = Math.round(shots * 0.5);
   return JSON.stringify({
-    model: model || "preview",
+    model: "preview",
     title: "Local preview stub",
     qubits: 5,
     shots: shots,
@@ -59,16 +61,12 @@ function fake(model, shots, errorQubit, errorPauli) {
       detected: 1,
       logical_correct: 1,
       correlated: 1,
-      note: "Local preview stub — not a real Qollab run.",
+      note: "Local preview stub \u2014 not a real Qollab run.",
     },
   });
 }
-
-export function run(backend, shots = 1024, errorQubit = null, errorPauli = "X") {
-  return fake("preview", shots, errorQubit, errorPauli);
-}
-run.callPromising = function (backend, shots, errorQubit, errorPauli) {
-  return Promise.resolve(run(backend, shots, errorQubit, errorPauli));
+run.callPromising = function (backend, params) {
+  return Promise.resolve(run(backend, params));
 };
 '''
 open("qollab-local/quantum-stub.js", "w", encoding="utf-8").write(stub)

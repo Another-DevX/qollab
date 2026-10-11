@@ -949,7 +949,6 @@
         "</section>" +
         "<section id='sb-math' style='margin-top:48px'></section>" +
         "<section id='sb-challenge' style='margin-top:48px'></section>" +
-        "<section id='sb-run' style='margin-top:48px'></section>" +
         "<aside class='transition'><div class='big'>05</div><div><span class='eyebrow' style='color:var(--faint)'>Next</span>" +
           "<p class='q'>We built the code. How do we know when an error occurs?</p>" +
           "<p class='teaser'>Eight stabilizer measurements reveal where errors occurred — without reading the logical information.</p>" +
@@ -1096,50 +1095,7 @@
       $sel("#gz-reset", root).addEventListener("click", function () { gz.step = 0; gz.minus = false; updateGhz(); });
     }
 
-    /* Run the nine-qubit Shor encoding on a backend and read its syndrome. */
-    function mountShorRun() {
-      var sbr = { error: "none" };
-      var host = $sel("#sb-run", root);
-      host.innerHTML =
-        "<div class='page-head'><div class='meta'><span class='kick'>On hardware · run the encoding</span></div>" +
-          "<h2 class='headline' style='font-size:1.6rem'>Run the Shor circuit</h2>" +
-          "<p class='dek' style='margin-top:8px'>Execute the exact nine-qubit encoding on a backend and read its eight stabilizers. With no error, no check should fire.</p></div>" +
-        "<div class='panel' style='margin-top:16px'>" +
-          "<div class='caption'>Inject a single-qubit error (optional)</div>" +
-          "<div class='chip-row' style='margin-top:8px' id='sbr-err'>" +
-            [["none", "none"], ["X", "X on q₁"], ["Z", "Z on q₁"]].map(function (e) {
-              return "<button class='chip" + (sbr.error === e[0] ? " active" : "") + "' data-sbr='" + e[0] + "'>" + e[1] + "</button>";
-            }).join("") +
-          "</div></div>" +
-        "<div id='sbr-card' style='margin-top:16px'></div>";
-      function paint() {
-        $all("#sbr-err [data-sbr]", root).forEach(function (el) {
-          el.classList.toggle("active", el.getAttribute("data-sbr") === sbr.error);
-        });
-      }
-      $all("#sbr-err [data-sbr]", root).forEach(function (el) {
-        el.addEventListener("click", function () { sbr.error = el.getAttribute("data-sbr"); paint(); });
-      });
-      CircuitRun.mount($sel("#sbr-card", root), {
-        model: "shor",
-        label: "Run the Shor circuit",
-        options: function () {
-          return sbr.error === "none" ? {} : { errorQubit: 0, errorPauli: sbr.error };
-        },
-        onResult: function (result, out) {
-          var bits = bitsInOrder(dominantKey(result.counts));
-          if (!bits.length) return;
-          out.insertAdjacentHTML("beforeend",
-            "<div class='cmp-row' style='margin-top:10px'><span class='caption'>Dominant syndrome s</span>" +
-            "<span class='m'>(" + bits.join(", ") + ")</span></div>" +
-            "<p class='caption' style='margin-top:6px'>" + (bits.join("") === "00000000"
-              ? "No stabilizer fired: the encoded state is a +1 eigenstate of all eight checks."
-              : "Lit stabilizers mark where the error was caught.") + "</p>");
-        },
-      });
-    }
-
-    updateGhz(); update(); updateChallenge(); mountShorRun();
+    updateGhz(); update(); updateChallenge();
     return null;
   }
 
@@ -1410,6 +1366,7 @@
         "<section style='margin-top:32px'><div class='stack' id='nl-controls'></div></section>" +
         "<section style='margin-top:24px'><div class='panel'><div class='caption'>Logical failure probability vs physical error rate</div><div id='nl-chart' style='margin-top:8px'></div><div class='legend-chart' id='nl-legend'></div></div></section>" +
         "<section id='nl-summary' style='margin-top:24px'></section>" +
+        "<section id='nl-circuit' style='margin-top:32px'></section>" +
         "<section id='nl-discovery' style='margin-top:48px'></section>" +
         "<section id='nl-quiz' style='margin-top:64px'></section>" +
         "<aside class='transition'><div class='big'>M3</div><div><span class='eyebrow' style='color:var(--faint)'>Next module</span>" +
@@ -1524,7 +1481,49 @@
       $sel("#quiz-confirm", root).addEventListener("click", function () { quiz = Quiz.confirm(quiz); updateQuiz(); });
       $sel("#quiz-next", root).addEventListener("click", function () { quiz = Quiz.next(quiz); updateQuiz(); });
     }
-    update(); updateQuiz();
+    /* One real backend job for the current noise model: encode, inject a single
+     * error of the selected type, and read the stabilizers. */
+    function mountNoiseRun() {
+      var nlr = { code: "repetition" };
+      var host = $sel("#nl-circuit", root);
+      host.innerHTML =
+        "<div class='page-head'><div class='meta'><span class='kick'>On hardware · one job</span></div>" +
+          "<h2 class='headline' style='font-size:1.6rem'>Run the circuit for this noise model</h2>" +
+          "<p class='dek' style='margin-top:8px'>Encode, inject one error of the type chosen above, and read the stabilizers on a backend. Compare the measured detection with the model.</p></div>" +
+        "<div class='panel' style='margin-top:16px'>" +
+          "<div class='caption'>Code</div>" +
+          "<div class='chip-row' style='margin-top:8px' id='nlr-code'>" +
+            [["repetition", "Repetition [[3,1,3]]"], ["shor", "Shor [[9,1,3]]"]].map(function (c) {
+              return "<button class='chip" + (nlr.code === c[0] ? " active" : "") + "' data-nlr='" + c[0] + "'>" + c[1] + "</button>";
+            }).join("") +
+          "</div>" +
+          "<p class='caption' style='margin-top:8px'>The injected error follows the noise model above — " +
+            (nl.model === "z" ? "a phase flip (Z)" : "a bit flip (X)") + " on one physical qubit.</p>" +
+        "</div>" +
+        "<div id='nlr-card' style='margin-top:16px'></div>";
+      function paint() {
+        $all("#nlr-code [data-nlr]", root).forEach(function (el) {
+          el.classList.toggle("active", el.getAttribute("data-nlr") === nlr.code);
+        });
+      }
+      $all("#nlr-code [data-nlr]", root).forEach(function (el) {
+        el.addEventListener("click", function () { nlr.code = el.getAttribute("data-nlr"); paint(); });
+      });
+      CircuitRun.mount($sel("#nlr-card", root), {
+        model: function () { return nlr.code; },
+        label: "Run one job",
+        options: function () {
+          return { errorQubit: nlr.code === "repetition" ? 1 : 0, errorPauli: nl.model === "z" ? "Z" : "X" };
+        },
+        onResult: function (result, out) {
+          out.insertAdjacentHTML("beforeend",
+            "<p class='caption' style='margin-top:10px'>One " + (nl.model === "z" ? "Z" : "X") + " error in the " +
+            (nlr.code === "shor" ? "Shor" : "repetition") + " code, measured on the backend.</p>");
+        },
+      });
+    }
+
+    update(); updateQuiz(); mountNoiseRun();
     return null;
   }
 

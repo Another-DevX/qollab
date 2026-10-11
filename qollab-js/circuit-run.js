@@ -108,8 +108,9 @@
       btn.disabled = true;
       status.textContent = "Submitting one job…";
       out.innerHTML = "";
+      var model = typeof opts.model === "function" ? opts.model() : opts.model;
       var options = typeof opts.options === "function" ? opts.options() : opts.options;
-      run(opts.model, options).then(function (result) {
+      run(model, options).then(function (result) {
         status.textContent = result.shots + " shots · " + result.qubits + " qubits";
         out.innerHTML =
           barsHTML(result.counts) +

@@ -13,7 +13,7 @@ so it cannot correct it — the point of Module 4.
 
 from qiskit import QuantumCircuit
 
-from .common import DEFAULT_SHOTS, apply_pauli, bits_of, probability, response, run_circuit
+from .common import apply_pauli, bits_of, parse_options, probability, response, run_circuit
 
 MODEL = "iceberg"
 TITLE = "Iceberg code [[4,2,2]] (detection)"
@@ -22,7 +22,8 @@ SX_ANCILLA = 4
 SZ_ANCILLA = 5
 
 
-def run(backend, shots=DEFAULT_SHOTS, error_qubit=None, error_pauli="X"):
+def run(backend, params_json="{}"):
+    shots, error_qubit, error_pauli = parse_options(params_json)
     qc = QuantumCircuit(QUBITS, QUBITS)
     qc.h(0)  # prepare a codestate: |0000> + |1111> (a 4-qubit GHZ)
     qc.cx(0, 1)

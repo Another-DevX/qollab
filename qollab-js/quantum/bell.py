@@ -7,14 +7,15 @@
 
 from qiskit import QuantumCircuit
 
-from .common import DEFAULT_SHOTS, apply_pauli, probability, response, run_circuit
+from .common import apply_pauli, parse_options, probability, response, run_circuit
 
 MODEL = "bell"
 TITLE = "Bell state (baseline)"
 QUBITS = 2
 
 
-def run(backend, shots=DEFAULT_SHOTS, error_qubit=None, error_pauli="X"):
+def run(backend, params_json="{}"):
+    shots, error_qubit, error_pauli = parse_options(params_json)
     qc = QuantumCircuit(2, 2)
     qc.h(0)
     qc.cx(0, 1)

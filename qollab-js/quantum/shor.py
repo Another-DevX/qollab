@@ -17,7 +17,7 @@ left out on purpose, to keep the file short.)
 
 from qiskit import QuantumCircuit
 
-from .common import DEFAULT_SHOTS, apply_pauli, probability, response, run_circuit
+from .common import apply_pauli, parse_options, probability, response, run_circuit
 
 MODEL = "shor"
 TITLE = "Shor code [[9,1,3]]"
@@ -29,7 +29,8 @@ Z_PAIRS = [(0, 1), (1, 2), (3, 4), (4, 5), (6, 7), (7, 8)]
 X_BLOCKS = [range(0, 6), range(3, 9)]
 
 
-def run(backend, shots=DEFAULT_SHOTS, error_qubit=None, error_pauli="X"):
+def run(backend, params_json="{}"):
+    shots, error_qubit, error_pauli = parse_options(params_json)
     qc = QuantumCircuit(QUBITS, 8)
     qc.h(0)  # encode: outer phase-flip code -> the three block leaders in |+>
     qc.h(3)
