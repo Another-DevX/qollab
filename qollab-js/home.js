@@ -73,40 +73,35 @@
     return svg("0 0 108 46", body);
   }
 
-  /* 03 · a small surface-code lattice with X- and Z-type tiles. */
+  /* Surface code: a 3×3 patch of data qubits with two highlighted plaquettes. */
   function latticeMini() {
-    var xs = [22, 54, 86], ys = [16, 34, 52];
+    var n = [10, 32, 54];
     var edges = "";
-    for (var a = 0; a < 3; a++) {
-      for (var b = 0; b < 3; b++) {
-        if (b < 2) edges += "<line class='mini-line' x1='" + xs[b] + "' y1='" + ys[a] + "' x2='" + xs[b + 1] + "' y2='" + ys[a] + "'/>";
-        if (a < 2) edges += "<line class='mini-line' x1='" + xs[b] + "' y1='" + ys[a] + "' x2='" + xs[b] + "' y2='" + ys[a + 1] + "'/>";
+    for (var r = 0; r < 3; r++) {
+      for (var c = 0; c < 3; c++) {
+        if (c < 2) edges += "<line class='mini-line' x1='" + n[c] + "' y1='" + n[r] + "' x2='" + n[c + 1] + "' y2='" + n[r] + "'/>";
+        if (r < 2) edges += "<line class='mini-line' x1='" + n[c] + "' y1='" + n[r] + "' x2='" + n[c] + "' y2='" + n[r + 1] + "'/>";
       }
     }
+    var tile = function (cx, cy, cls) { return "<rect class='mini-tile " + cls + "' x='" + (cx - 8) + "' y='" + (cy - 8) + "' width='16' height='16' rx='3'/>"; };
+    var tiles = tile(21, 21, "") + tile(43, 21, "z");
     var nodes = "";
-    for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) nodes += "<circle class='mini-node' cx='" + xs[j] + "' cy='" + ys[i] + "' r='3'/>";
-    return svg("0 0 108 66",
-      edges +
-      "<rect class='mini-tile' x='33' y='22' width='30' height='20' rx='2'/>" +
-      "<rect class='mini-tile z' x='57' y='22' width='30' height='20' rx='2'/>" +
-      nodes
-    );
+    for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) nodes += "<circle class='mini-node' cx='" + n[j] + "' cy='" + n[i] + "' r='2.6'/>";
+    return svg("0 0 64 64", edges + tiles + nodes);
   }
 
-  /* 04 · the four-qubit [[4,2,2]] code: one X-type and one Z-type stabilizer. */
+  /* Iceberg code: a detection graph — one check above, one below, five qubits between. */
   function icebergMini() {
-    var dot = function (x) { return "<circle class='mini-node' cx='" + x + "' cy='28' r='3.4'/>"; };
-    return svg("0 0 108 52",
-      dot(20) + dot(42) + dot(66) + dot(88) +
-      "<line class='mini-dash' x1='20' y1='12' x2='88' y2='12'/>" +
-      "<line class='mini-line' x1='20' y1='44' x2='88' y2='44'/>" +
-      "<line class='mini-line' x1='20' y1='15' x2='20' y2='25'/>" +
-      "<line class='mini-line' x1='88' y1='15' x2='88' y2='25'/>" +
-      "<line class='mini-line' x1='20' y1='31' x2='20' y2='41'/>" +
-      "<line class='mini-line' x1='88' y1='31' x2='88' y2='41'/>" +
-      "<text class='mini-label' x='10' y='15' text-anchor='end'>S</text>" +
-      "<text class='mini-label' x='10' y='47' text-anchor='end'>S</text>"
-    );
+    var mid = [8, 23, 38, 53, 68], my = 32;
+    var body = "";
+    for (var i = 0; i < mid.length; i++) {
+      body += "<line class='ln' x1='38' y1='8' x2='" + mid[i] + "' y2='" + my + "'/>";
+      body += "<line class='ln' x1='" + mid[i] + "' y1='" + my + "' x2='38' y2='56'/>";
+    }
+    body += "<circle class='n' cx='38' cy='8' r='6'/>";
+    for (i = 0; i < mid.length; i++) body += "<circle class='n' cx='" + mid[i] + "' cy='" + my + "' r='5'/>";
+    body += "<circle class='n solid' cx='38' cy='56' r='7'/>";
+    return svg("0 0 76 64", body, "fig-nodes");
   }
 
   var FIGS = { errors: blochMini, shor: shorMini, iceberg: icebergMini, surface: latticeMini };
@@ -132,7 +127,7 @@
         "<div class='home-split'>" +
           "<section class='home-cover' aria-label='Introduction'>" +
             "<p class='eyebrow'>Interactive quantum learning</p>" +
-            "<h1 class='headline home-title'>Quantum<br>Error Correction and Detection</h1>" +
+            "<h1 class='headline home-title'>Quantum Error<br>Correction and Detection</h1>" +
             "<p class='home-sub'>Explore quantum errors, build codes, and learn how quantum information survives noise.</p>" +
             "<figure class='home-figure'>" + heroBloch() +
               "<figcaption class='home-figure-cap'><span class='m'>|&psi;&rang; = &alpha;|0&rang; + &beta;|1&rang;</span></figcaption>" +

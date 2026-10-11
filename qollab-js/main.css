@@ -25,13 +25,20 @@
     color-scheme:dark;
   }
   *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
+  html{scroll-behavior:smooth; background-color:var(--surface)}
   body{
     margin:0; min-height:100vh; display:flex; flex-direction:column;
     background-color:var(--surface); color:var(--ink);
     font-family:var(--sans); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-    background-image:radial-gradient(90rem 44rem at 50% -20%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 60%);
-    background-attachment:fixed;
+    /* One continuous scientific-paper grid behind the whole app (same as the Home page). */
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--line) 40%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--line) 40%, transparent) 1px, transparent 1px),
+      radial-gradient(90rem 44rem at 50% -20%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 60%);
+    background-size:32px 32px, 32px 32px, auto;
+    background-position:-1px -1px, -1px -1px, 50% -20%;
+    background-repeat:repeat, repeat, no-repeat;
+    background-attachment:scroll, scroll, fixed;
   }
   ::selection{background:color-mix(in srgb, var(--accent) 26%, transparent)}
   a{color:inherit}
@@ -303,11 +310,6 @@
     padding-top:clamp(14px,2.2vh,30px);
     padding-bottom:clamp(24px,4vh,52px);
     padding-inline:clamp(20px,3vw,48px);
-    background-image:
-      linear-gradient(to right, color-mix(in srgb, var(--line) 40%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in srgb, var(--line) 40%, transparent) 1px, transparent 1px);
-    background-size:32px 32px;
-    background-position:-1px -1px;
   }
   .home-split{display:grid; grid-template-columns:1fr; gap:clamp(22px,3.4vh,44px); align-items:center}
   @media (min-width:980px){
@@ -365,11 +367,53 @@
   .mini-tile.z{fill:color-mix(in srgb, var(--accent-2) 9%, transparent); stroke:var(--accent-2); stroke-dasharray:3 2}
   .mini-dash{stroke:var(--accent); stroke-width:1.1; stroke-dasharray:4 3; fill:none}
   .mini-label{fill:var(--faint); font-family:var(--mono); font-style:normal; font-size:7px}
+  /* Iceberg card icon: detection graph (platform tokens). */
+  .fig-nodes .ln{stroke:var(--accent); stroke-width:1.6; fill:none}
+  .fig-nodes .n{fill:color-mix(in srgb, var(--accent) 16%, var(--surface-2)); stroke:var(--accent); stroke-width:1.4}
+  .fig-nodes .n.solid{fill:var(--accent)}
 
   /* Desktop: keep the cover and the four cards inside one viewport where it fits. */
   @media (min-width:980px) and (min-height:701px){
     .home{min-height:calc(100dvh - 64px - 74px); display:flex; flex-direction:column; justify-content:center}
   }
+
+  /* ---------- Module covers (40/60 editorial layout) ---------- */
+  .cover-page{max-width:1040px; margin:0 auto; padding:clamp(16px,2.4vh,32px) 20px clamp(24px,4vh,56px)}
+  .m3 .cover-page--bare{max-width:none; margin:0; padding:0}
+  .module-cover{display:grid; grid-template-columns:1fr; gap:clamp(26px,3.6vh,44px); align-items:center}
+  @media (min-width:900px){ .module-cover{grid-template-columns:minmax(0,40fr) minmax(0,60fr); gap:clamp(36px,5vw,80px)} }
+  .cover-intro{max-width:34rem}
+  .cover-title{font-size:clamp(1.9rem,3.3vw,3.4rem); line-height:1.06; margin-top:clamp(10px,1.6vh,18px); letter-spacing:-.015em}
+  .cover-sub{margin-top:clamp(8px,1.2vh,12px); font-size:clamp(1.02rem,1.3vw,1.15rem); line-height:1.5; color:var(--muted)}
+  .cover-dek{margin-top:clamp(8px,1.2vh,12px); max-width:52ch}
+  .cover-cta{display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin-top:clamp(14px,2.2vh,22px)}
+  .cover-figure{margin:clamp(14px,2.4vh,26px) 0 0; display:flex; flex-direction:column; align-items:center}
+  .cover-figure .bloch-wrap{height:clamp(180px,26vh,260px); min-height:0; width:100%; max-width:420px}
+  .cover-hero{width:100%; max-width:280px; margin:0 auto}
+  .cover-figure-panel{width:100%; max-width:400px; margin:0 auto}
+  .cover-svg{width:100%; max-width:430px; height:auto; display:block}
+  /* Module 2 cover: three GHZ blocks (A/B/C), three physical qubits each. */
+  .cover-eq{margin-bottom:clamp(8px,1.4vh,14px); text-align:center}
+  .cover-eq .m{font-size:1.02rem; color:var(--ink)}
+  .cover-blocks .blk{fill:none; stroke:var(--accent-2); stroke-width:1.6}
+  .cover-blocks .node{fill:var(--surface-2); stroke:var(--accent-2); stroke-width:1.6}
+  .cover-blocks .link{stroke:var(--line); stroke-width:1.4}
+  .cover-blocks .q{fill:var(--ink); font-family:var(--mono); font-style:normal; font-size:13px; font-weight:600; text-anchor:middle}
+  .cover-blocks .blk-label{fill:var(--muted); font-family:var(--mono); font-style:normal; font-size:11px; letter-spacing:.12em; text-transform:uppercase; text-anchor:middle}
+
+  .cover-route{min-width:0}
+  .route-head{display:flex; align-items:center; gap:16px}
+  .route-list{list-style:none; margin:clamp(12px,1.8vh,20px) 0 0; padding:0}
+  .route-item{display:flex; align-items:baseline; gap:clamp(14px,2vw,26px); padding:clamp(11px,1.6vh,17px) 0; border-top:1px solid var(--line); text-decoration:none; color:inherit; transition:border-color .15s ease}
+  .route-list li:last-child .route-item{border-bottom:1px solid var(--line)}
+  .route-num{flex:0 0 auto; min-width:2.1ch; font-family:var(--serif); font-size:clamp(1.3rem,2vw,1.85rem); line-height:1; color:color-mix(in srgb, var(--accent) 68%, var(--faint))}
+  .route-body{display:flex; flex-direction:column; gap:3px; flex:1; min-width:0}
+  .route-title{font-family:var(--serif); font-weight:600; font-size:clamp(1rem,1.25vw,1.16rem); line-height:1.2; letter-spacing:-.01em; color:var(--ink)}
+  .route-desc{font-size:.9rem; line-height:1.45; color:var(--muted)}
+  .route-arrow{flex:0 0 auto; align-self:center; color:var(--faint); transition:transform .15s ease, color .15s ease}
+  .route-item:hover .route-title, .route-item:focus-visible .route-title{color:var(--accent)}
+  .route-item:hover .route-arrow, .route-item:focus-visible .route-arrow{transform:translateX(4px); color:var(--accent)}
+  @media (prefers-reduced-motion:reduce){ .route-item,.route-arrow{transition:none} .route-item:hover .route-arrow{transform:none} }
 
   /* ---------- Shor register + circuit ---------- */
   .shor{width:100%; height:auto; display:block}
@@ -513,7 +557,7 @@
 
   max-width: 1040px;
   margin: 0 auto;
-  padding: 48px 20px 96px;
+  padding: 40px 20px 64px;
   color: var(--ink);
 }
 .m3.page { animation: qc-fade .4s ease both; }

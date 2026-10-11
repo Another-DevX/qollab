@@ -126,27 +126,20 @@
     ["05", "Break the Iceberg Code", "Find an undetectable logical error with two qubits.", "#/module-4/break-the-code"],
   ];
   function renderCover(root) {
-    root.innerHTML =
-      "<div class='container'>" +
-        UI.backLink("#/", "All modules") +
-        "<div class='cover'>" +
-          "<div>" +
-            "<div style='display:flex;align-items:center;gap:12px'><span style='height:1px;width:40px;background:var(--accent)'></span><span class='eyebrow'>Module 3 — Quantum Error Correction</span></div>" +
-            "<h1 class='headline' style='margin-top:24px'>Iceberg Code</h1>" +
-            "<p class='sub'>Detecting Errors Without Correcting Them</p>" +
-            "<p class='dek' style='margin-top:16px'>What if a quantum code can detect errors but cannot tell us how to correct them? Explore how four physical qubits can protect two logical qubits through error detection and postselection.</p>" +
-            "<p class='dek' style='margin-top:12px'>The stabilizer code <span class='m'>[[4, 2, 2]]</span> shows the hidden part of the iceberg: an error can be visible yet leave its location below the waterline.</p>" +
-            "<div class='cta'><a class='btn primary' href='#/module-4/four-physical-two-logical'>Start Exploring →</a><span class='caption'>≈ 15 min · 5 lessons, 1 challenge</span></div>" +
-          "</div>" +
-          "<div class='panel' style='padding:10px'>" + registerSVG({}) + "</div>" +
-        "</div>" +
-        "<section aria-label='Module route' style='margin-top:64px'>" +
-          "<div style='display:flex;align-items:center;gap:16px'><span class='eyebrow' style='color:var(--faint)'>The route</span><span class='rule' style='flex:1'></span></div>" +
-          "<ol class='roadmap' style='margin-top:24px'>" +
-            ROADMAP.map(function (it) { return "<li><a href='" + it[3] + "'><span class='n'>" + it[0] + "</span><div class='t'>" + it[1] + "</div><div class='l'>" + it[2] + "</div></a></li>"; }).join("") +
-          "</ol>" +
-        "</section>" +
-      "</div>";
+    root.innerHTML = UI.moduleCover({
+      backHref: "#/", backLabel: "All modules",
+      label: "Module 3 — Quantum Error Correction",
+      title: "Iceberg Code",
+      sub: "Detecting Errors Without Correcting Them",
+      deks: [
+        "What if a quantum code can detect errors but cannot tell us how to correct them? Explore how four physical qubits can protect two logical qubits through error detection and postselection.",
+        "The stabilizer code <span class='m'>[[4, 2, 2]]</span> shows the hidden part of the iceberg: an error can be visible yet leave its location below the waterline.",
+      ],
+      ctaHref: "#/module-4/four-physical-two-logical", ctaLabel: "Start Exploring \u2192",
+      meta: "\u2248 15 min \u00b7 5 lessons, 1 challenge",
+      figure: "<div class='cover-figure-panel'>" + registerSVG({}) + "</div>",
+      lessons: ROADMAP.map(function (it) { return { num: it[0], title: it[1], desc: it[2], href: it[3] }; }),
+    });
     return null;
   }
 

@@ -435,27 +435,21 @@
   // ================================================================ cover
 
   function renderCover(page) {
-    page.innerHTML =
-      UI.backLink("#/", "All modules") +
-      '<div class="cover">' +
-        '<div>' +
-          "<div style='display:flex;align-items:center;gap:12px'><span style='height:1px;width:40px;background:var(--accent)'></span><span class='eyebrow'>Module 4 — Quantum Error Correction</span></div>" +
-          "<h1 class='headline' style='margin-top:24px'>The Surface Code</h1>" +
-          "<p class='sub'>How can a 2D grid of qubits correct errors that occur anywhere?</p>" +
-          "<p class='dek' style='margin-top:16px'>In Module 2, the Shor code guarded one qubit with nine in a line — but its checks reach across the whole register.</p>" +
-          "<p class='dek' style='margin-top:12px'>Real chips can only wire neighbours. What if every check were local: a small tile on a grid?</p>" +
-          "<div class='cta'><a class='btn primary' href='" + BASE + "/grid'>Start Experimenting →</a><span class='caption'>≈ 20 min · " + LESSONS.length + " lessons</span></div>" +
-        "</div>" +
-        "<div class='hero' id='hero'></div>" +
-      "</div>" +
-      "<section aria-label='Module route' style='margin-top:64px'>" +
-        "<div style='display:flex;align-items:center;gap:16px'><span class='eyebrow' style='color:var(--faint)'>The route</span><span class='rule' style='flex:1'></span></div>" +
-        "<ol class='roadmap' style='margin-top:24px'>" +
-          LESSONS.map(function (l) {
-            return "<li><a href='" + BASE + l.path + "'><span class='n'>" + l.num + "</span><div class='t'>" + esc(l.short) + "</div><div class='l'>" + esc(l.q) + "</div></a></li>";
-          }).join("") +
-        "</ol>" +
-      "</section>";
+    page.innerHTML = UI.moduleCover({
+      bare: true,
+      backHref: "#/", backLabel: "All modules",
+      label: "Module 4 — Quantum Error Correction",
+      title: "The Surface Code",
+      sub: "How can a 2D grid of qubits correct errors that occur anywhere?",
+      deks: [
+        "In Module 2, the Shor code guarded one qubit with nine in a line — but its checks reach across the whole register.",
+        "Real chips can only wire neighbours. What if every check were local: a small tile on a grid?",
+      ],
+      ctaHref: BASE + "/grid", ctaLabel: "Start Experimenting \u2192",
+      meta: "\u2248 20 min \u00b7 " + LESSONS.length + " lessons",
+      figure: "<div class='cover-hero' id='hero'></div>",
+      lessons: LESSONS.map(function (l) { return { num: l.num, title: l.short, desc: l.q, href: BASE + l.path }; }),
+    });
 
     var hero = page.querySelector('#hero');
     var L = S.buildLattice(5);

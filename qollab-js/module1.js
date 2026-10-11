@@ -69,26 +69,17 @@
 
   function renderM1Cover(root) {
     var pal = P();
-    root.innerHTML =
-      "<div class='container'>" +
-        UI.backLink("#/", "All modules") +
-        "<div class='cover'>" +
-          "<div>" +
-            "<div style='display:flex;align-items:center;gap:12px'><span style='height:1px;width:40px;background:var(--accent)'></span><span class='eyebrow'>Module 1 — Quantum Error Correction</span></div>" +
-            "<h1 class='headline' style='margin-top:24px'>Understanding quantum errors</h1>" +
-            "<p class='sub'>A qubit is fragile. To protect it, we first need to see how it fails.</p>" +
-            "<p class='dek' style='margin-top:16px'>Follow a single qubit across the Bloch sphere: how the Pauli errors X, Y and Z move it, why they form a complete basis, and how to identify the error behind a given outcome.</p>" +
-            "<div class='cta'><a class='btn primary' href='#/module-1/pauli-errors'>Start reading →</a><span class='caption'>≈ 10 min · 3 experiments, 1 challenge</span></div>" +
-          "</div>" +
-          blochBlock("m1-cover-canvas", [{ c: pal.original, t: "State |+i⟩" }], "min(50vh,400px)") +
-        "</div>" +
-        "<section aria-label='Module route' style='margin-top:64px'>" +
-          "<div style='display:flex;align-items:center;gap:16px'><span class='eyebrow' style='color:var(--faint)'>The route</span><span class='rule' style='flex:1'></span></div>" +
-          "<ol class='roadmap' style='margin-top:24px'>" +
-            M1_ROUTE.map(function (it) { return "<li><a href='" + it.href + "'><span class='n'>" + it.n + "</span><div class='t'>" + it.title + "</div><div class='l'>" + it.line + "</div></a></li>"; }).join("") +
-          "</ol>" +
-        "</section>" +
-      "</div>";
+    root.innerHTML = UI.moduleCover({
+      backHref: "#/", backLabel: "All modules",
+      label: "Module 1 — Quantum Error Correction",
+      title: "Understanding quantum errors",
+      sub: "A qubit is fragile. To protect it, we first need to see how it fails.",
+      deks: ["Follow a single qubit across the Bloch sphere: how the Pauli errors X, Y and Z move it, why they form a complete basis, and how to identify the error behind a given outcome."],
+      ctaHref: "#/module-1/pauli-errors", ctaLabel: "Start reading \u2192",
+      meta: "\u2248 10 min \u00b7 3 experiments, 1 challenge",
+      figure: blochBlock("m1-cover-canvas", [{ c: pal.original, t: "State |+i\u27e9" }]),
+      lessons: M1_ROUTE.map(function (it) { return { num: it.n, title: it.title, desc: it.line, href: it.href }; }),
+    });
     var sphere = new BlochSphere(UI.$sel("#m1-cover-canvas", root));
     var b = M.blochVector(M.KET_PLUS_I);
     sphere.setArrows([{ id: "s", color: pal.original, vector: [b.x, b.y, b.z] }]);
@@ -227,7 +218,6 @@
   var COMPARISON = [
     { title: "Linear combination", tex: "E = a I + b X + c Y + d Z", line: "One operator, built from complex coefficients." },
     { title: "Sequential application", tex: "X Y = iZ ≠ X + Y", line: "Applying operators in turn is a product, not a sum." },
-    { title: "Probabilistic mixture", tex: "ρ′ = Σ<sub>k</sub> p<sub>k</sub> E<sub>k</sub> ρ E<sub>k</sub><sup>†</sup>", line: "“X with probability p” is a channel, not an operator." },
   ];
   function axisFromSpherical(theta, phi) { return { x: Math.sin(theta) * Math.cos(phi), y: Math.sin(theta) * Math.sin(phi), z: Math.cos(theta) }; }
 
@@ -240,10 +230,12 @@
         UI.backLink("#/module-1/pauli-errors", "Pauli errors") +
         UI.pageHead("02", "Pauli basis", "Four matrices are enough", "Any single-qubit operator is a combination of I, X, Y and Z.") +
         "<div class='grid-two' style='margin-top:32px;align-items:center'>" +
-          UI.eq(mx("E = a I + b X + c Y + d Z, &nbsp; a, b, c, d ∈ ℂ")) +
+          "<div>" + UI.eq(mx("E = a I + b X + c Y + d Z, &nbsp; a, b, c, d ∈ ℂ")) +
+            "<p class='dek' style='margin-top:12px'>Here, " + mx("E") + " represents a quantum error operator acting on a single qubit. Even though quantum errors can take infinitely many forms, any such operator can be written as a linear combination of " + mx("I") + ", " + mx("X") + ", " + mx("Y") + ", and " + mx("Z") + ".</p>" +
+          "</div>" +
           "<div class='grid2'>" + ["I", "X", "Y", "Z"].map(function (n) { return "<div class='quiet' style='display:flex;align-items:center;justify-content:center;min-height:64px'>" + UI.matrixHTML(M.PAULI_MATRICES[n], { label: n + " =", digits: 0, highlight: true, accent: pal.original }) + "</div>"; }).join("") + "</div>" +
         "</div>" +
-        "<div class='grid3' style='margin-top:40px'>" + COMPARISON.map(function (b) { return "<div class='cmpblock'><p class='ct'>" + b.title + "</p><div class='eqbox'>" + mx(b.tex) + "</div><p class='cl'>" + b.line + "</p></div>"; }).join("") + "</div>" +
+        "<div class='grid2' style='margin-top:40px'>" + COMPARISON.map(function (b) { return "<div class='cmpblock'><p class='ct'>" + b.title + "</p><div class='eqbox'>" + mx(b.tex) + "</div><p class='cl'>" + b.line + "</p></div>"; }).join("") + "</div>" +
         "<div style='margin-top:64px'><h3 class='headline' style='font-size:1.5rem'>Rotations live in the basis too</h3>" +
           "<p class='dek' style='margin-top:8px'>A rotation of angle α about the unit axis " + mx("<b>n</b>") + " is a Pauli combination.</p>" +
           "<div style='margin-top:24px'>" + UI.eq(mx("R<sub><b>n</b></sub>(α) = cos(α/2) I − i sin(α/2) (n<sub>x</sub> X + n<sub>y</sub> Y + n<sub>z</sub> Z)")) + "</div>" +
@@ -262,9 +254,8 @@
         "</div>" +
         "<div style='margin-top:64px;border-top:1px solid var(--line);padding-top:32px'><h3 class='headline' style='font-size:1.5rem'>An operator is not a channel</h3>" +
           "<p class='dek' style='margin-top:8px'>Unitaries move pure states around the surface. Real noise can do more.</p>" +
-          "<div class='grid2' style='margin-top:24px'>" +
+          "<div style='margin-top:24px;max-width:560px'>" +
             "<div class='panel'><p class='ct'>Unitary operator</p><div class='eqbox' style='margin-top:12px'>" + mx("|ψ⟩ ↦ U |ψ⟩") + "</div><ul class='bullets'><li>Pure states stay pure.</li><li>Bloch vector keeps length 1.</li><li>A Pauli error, or any rotation.</li></ul></div>" +
-            "<div class='panel'><p class='ct'>Quantum channel</p><div class='eqbox' style='margin-top:12px'>" + mx("ρ ↦ Σ<sub>k</sub> E<sub>k</sub> ρ E<sub>k</sub><sup>†</sup>") + "</div><ul class='bullets'><li>Pure states can become mixed.</li><li>Bloch vector can shrink: " + mx("|<b>r</b>| < 1") + ".</li><li>Models decoherence and probabilistic noise.</li></ul></div>" +
           "</div>" +
           "<div style='margin-top:16px'>" + UI.expandable("Why? — Kraus operators and completeness", "A channel is written with operators " + mx("E<sub>k</sub>") + " that need not be unitary. The condition " + mx("Σ<sub>k</sub> E<sub>k</sub><sup>†</sup> E<sub>k</sub> = I") + " keeps probabilities summing to one. With a single term, " + mx("E<sub>1</sub> = U") + " recovers the unitary case — which is why one arrow on the sphere cannot capture every kind of noise.") + "</div>" +
         "</div>" +
