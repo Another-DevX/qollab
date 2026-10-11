@@ -52,6 +52,7 @@ trayectorias y ejes de rotación.
 | `index.html` | Estructura de la página (sin `<script>` ni `<style>`). |
 | `main.css` | Todos los estilos: sistema de diseño de la plataforma + bloques scoped del Módulo 3 y del Lab. |
 | `main.js` | Punto de entrada: carga cada módulo en orden y arranca el router. |
+| `requirements.txt` | Paquetes Python que el runtime debe instalar. Incluye `qiskit_aer` (lo usa `quantum/noise.py`). |
 | `app.js` | Hash router, cabecera y tema (claro / oscuro). |
 | `bloch.js`, `m1math.js`, `ui.js` | Esfera de Bloch en Canvas 2D, matemática del Módulo 1, y constructores HTML compartidos. |
 | `home.js`, `module1.js`, `module2.js`, `module4.js` | Páginas de la plataforma. |
