@@ -66,10 +66,11 @@ trayectorias y ejes de rotación.
 ## Honestidad sobre la simulación
 
 - **Las animaciones son clásicas, pero los circuitos se pueden ejecutar de verdad.**
-  Dentro de Qollab, los botones *Run on the backend* (en la lección de repetición y
-  en el laboratorio de ruido) envían el circuito exacto de `quantum/*.py` a un
-  backend y usan los *counts* devueltos para leer el síndrome. Fuera de Qollab esos
-  botones quedan desactivados.
+  Dentro de Qollab, los botones *Run on the backend* (en la lección de repetición,
+  el laboratorio de ruido, los estabilizadores del Módulo 3 y la detección del
+  Módulo 4) envían el circuito exacto de `quantum/*.py` a un backend y usan los
+  *counts* devueltos para leer el síndrome. Fuera de Qollab esos botones quedan
+  desactivados.
 - **El resto de las simulaciones son clásicas, en el navegador.** El Módulo 3 usa
   un **modelo de marco de Pauli**: exacto para errores y correcciones de Pauli,
   pero no un simulador cuántico universal. Supone ruido de *capacidad de código*

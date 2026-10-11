@@ -632,6 +632,7 @@
       '<div class="btn-row"><button class="btn" type="button" data-action="clear">Clear errors</button></div>' +
       '<div id="s-note" aria-live="polite"></div></div>' +
       '<div class="panel"><h3>What did you notice?</h3><div id="s-obs"></div></div>' +
+      '<div class="panel"><h3>Run the checks on the backend</h3><div id="s-run"></div></div>' +
       '</div></div>' +
       '<section class="math-section" id="s-math"></section>' +
       transitionBlock('One error lights up to two tiles. What happens when errors line up?', '/strings', 'Draw error strings');
@@ -716,7 +717,49 @@
     });
     bindActions(page, { clear: function () { st.errors = S.emptyFrame(3); st.note = null; draw(); } });
     draw();
+    mountSurfaceRun(page);
     return function () { lat.destroy(); };
+  }
+
+  /* One real backend job for this lesson: inject an X error into the d = 3 patch
+   * and read the four Z-checks. Mirrors the "surface" Python model. */
+  function dominantBits(counts) {
+    var best = null, bestN = -1;
+    Object.keys(counts || {}).forEach(function (k) { if (counts[k] > bestN) { bestN = counts[k]; best = k; } });
+    return best ? best.split('').reverse().map(Number) : [];
+  }
+  function mountSurfaceRun(page) {
+    var sr = { q: 4 };
+    var host = page.querySelector('#s-run');
+    host.innerHTML =
+      '<p class="small">Inject one <span class="m">X</span> error into the patch and read the four Z-checks on a backend. No encoding is needed: |0…0⟩ is already a +1 eigenstate of every Z-check, so the round stays silent until the error appears.</p>' +
+      '<div class="chip-row" style="margin-top:10px" id="sr-q">' +
+        [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function (q) {
+          return '<button class="chip' + (sr.q === q ? ' active' : '') + '" type="button" data-sq="' + q + '">q' + (q + 1) + '</button>';
+        }).join('') +
+      '</div>' +
+      '<div id="sr-card" style="margin-top:12px"></div>';
+    function paint() {
+      Array.prototype.slice.call(page.querySelectorAll('#sr-q [data-sq]')).forEach(function (el) {
+        el.classList.toggle('active', Number(el.getAttribute('data-sq')) === sr.q);
+      });
+    }
+    Array.prototype.slice.call(page.querySelectorAll('#sr-q [data-sq]')).forEach(function (el) {
+      el.addEventListener('click', function () { sr.q = Number(el.getAttribute('data-sq')); paint(); });
+    });
+    window.CircuitRun.mount(page.querySelector('#sr-card'), {
+      model: 'surface',
+      label: 'Run one job',
+      options: function () { return { errorQubit: sr.q, errorPauli: 'X' }; },
+      onResult: function (result, out) {
+        var bits = dominantBits(result.counts);
+        var fired = [];
+        bits.forEach(function (b, i) { if (b) fired.push(i + 1); });
+        out.insertAdjacentHTML('beforeend',
+          '<p class="small" style="margin-top:10px">Z-check syndrome (' + bits.join(', ') + '): ' +
+          (fired.length ? 'check' + (fired.length > 1 ? 's ' : ' ') + fired.join(', ') + ' lit' : 'no check fired') + '.</p>');
+      }
+    });
   }
 
   // ======================================================== 03 · strings

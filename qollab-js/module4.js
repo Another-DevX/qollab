@@ -219,6 +219,7 @@
               "<div class='chip-row' id='m4-p2-paulis' style='margin-top:12px'></div>" +
               "<div class='toolbar' style='margin-top:14px'><button class='btn primary' id='m4-p2-measure'>Measure syndrome</button><button class='btn ghost' id='m4-p2-random'>Random error</button><button class='btn ghost' id='m4-p2-reset'>Reset</button></div></div>" +
             "<div class='panel'><h3>Read the syndrome</h3><div id='m4-p2-read'></div></div>" +
+            "<div class='panel'><h3>Run on the backend</h3><div id='m4-p2-run'></div></div>" +
           "</div>" +
         "</section>" +
         "<div style='margin-top:64px'>" +
@@ -348,7 +349,42 @@
     });
     UI.$sel("#m4-p2-reset", root).addEventListener("click", function () { st.error = "I"; st.measured = false; update(); });
     newChallenge();
+
+    /* Run the real [[4,2,2]] detection circuit for the error chosen above. */
+    function dominantBits(counts) {
+      var best = null, bestN = -1;
+      Object.keys(counts || {}).forEach(function (k) { if (counts[k] > bestN) { bestN = counts[k]; best = k; } });
+      return best ? best.split("").reverse().map(Number) : [];
+    }
+    function mountIcebergRun() {
+      var host = UI.$sel("#m4-p2-run", root);
+      host.innerHTML =
+        "<p class='caption'>The code state is the four-qubit GHZ (|0000⟩ + |1111⟩)/√2, a +1 eigenstate of both checks. Run the real circuit with the error you selected and read S_X and S_Z.</p>" +
+        "<div id='m4-p2-run-card' style='margin-top:12px'></div>";
+      window.CircuitRun.mount(UI.$sel("#m4-p2-run-card", root), {
+        model: "iceberg",
+        label: "Run one job",
+        options: function () {
+          return st.error === "I" ? {} : { errorQubit: st.selQ, errorPauli: st.error };
+        },
+        onResult: function (result, out) {
+          var bits = dominantBits(result.counts);
+          if (bits.length < 6) return;
+          var sx = bits[4], sz = bits[5];
+          var msg = (sx && sz) ? "Both checks fired — a Y-type error."
+            : sz ? "S_Z fired — an X-type error (Z commutes with X, but S_Z anticommutes)."
+            : sx ? "S_X fired — a Z-type error."
+            : "No check fired: the error is undetectable at this level (or none was injected).";
+          out.insertAdjacentHTML("beforeend",
+            "<div class='cmp-row' style='margin-top:10px'><span class='caption'>Measured checks</span>" +
+            UI.m("S_X = " + (sx ? "−1" : "+1") + ", S_Z = " + (sz ? "−1" : "+1")) + "</div>" +
+            "<p class='caption' style='margin-top:6px'>" + msg + "</p>");
+        }
+      });
+    }
+
     update();
+    mountIcebergRun();
     return null;
   }
 
