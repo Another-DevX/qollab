@@ -69,10 +69,11 @@ def main():
     if not only or "noise" in only:
         try:
             from quantum import noise
-            print("\n== in-circuit noise (Aer) · shor")
-            for ch in ("x", "z", "depol"):
-                nz = json.loads(noise.run(None, json.dumps({"channel": ch, "p": 0.05, "shots": args.shots})))
-                print(f"   {ch:<5} ideal detected={nz['ideal']['detected']:.3f}  noisy detected={nz['noisy']['detected']:.3f}")
+            print("\n== in-circuit noise (Aer)")
+            for mid in ("shor", "surface", "iceberg"):
+                for ch in ("x", "z", "depol"):
+                    nz = json.loads(noise.run(None, json.dumps({"model": mid, "channel": ch, "p": 0.05, "shots": args.shots})))
+                    print(f"   {mid:<8} {ch:<5} ideal detected={nz['ideal']['detected']:.3f}  noisy detected={nz['noisy']['detected']:.3f}")
         except Exception as exc:  # noqa: BLE001
             print(f"\n== in-circuit noise: skipped ({exc})")
 

@@ -1,9 +1,9 @@
 """In-circuit noise for the QEC circuits, via Qiskit Aer.
 
-When the selected backend is *not* Qollab's noisy simulator, this builds the
-exact circuit and attaches a standard noise channel to every gate, then runs it
-on a local Aer simulator and compares the ideal and noisy measurement
-distributions.
+When the selected backend is *ideal* (Qollab's built-in or AWS Braket
+simulator), this builds the exact circuit and attaches a standard noise channel
+to every gate, then runs it on a local Aer simulator and compares the ideal and
+noisy measurement distributions.
 
 Noise models used here are the standard, simple ones:
 
@@ -11,11 +11,11 @@ Noise models used here are the standard, simple ones:
     Information" (Cambridge, 2000).
   * Independent X / Z error model for QEC — Dennis, Kitaev, Landahl & Preskill,
     "Topological quantum memory", J. Math. Phys. 43, 4452 (2002).
-  * The code protected here — P. W. Shor, "Scheme for reducing decoherence in
-    quantum computer memory", Phys. Rev. A 52, R2493 (1995).
 
-The JS side only calls this when the backend is not the noisy one; otherwise it
-uses the backend's own noise model through the plain runner.
+Code references:
+  * Shor — P. W. Shor, Phys. Rev. A 52, R2493 (1995).
+  * Surface code — A. G. Fowler et al., Phys. Rev. A 86, 032324 (2012).
+  * Iceberg [[4,2,2]] — error detection with postselection (see Module 4).
 """
 
 import json
@@ -23,19 +23,53 @@ import json
 from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel, depolarizing_error, pauli_error
 
+from . import iceberg as iceberg_mod
 from . import shor as shor_mod
-from .common import DEFAULT_SHOTS, probability, run_circuit
+from . import surface as surface_mod
+from .common import DEFAULT_SHOTS, bits_of, probability, run_circuit
 
-MODEL = "shor"
-TITLE = "Shor code [[9,1,3]] under in-circuit noise"
-PROTECTED = "one logical qubit (memory) — Shor code [[9,1,3]]"
 CHANNELS = ("x", "z", "depol")
 
-CITATIONS = [
-    "Shor, Phys. Rev. A 52, R2493 (1995) — the [[9,1,3]] code",
+BASE_CITATIONS = [
     "Nielsen & Chuang (2000) — the depolarizing channel",
     "Dennis, Kitaev, Landahl & Preskill, J. Math. Phys. 43, 4452 (2002) — independent X/Z errors",
 ]
+
+
+def _any_ancilla(k):
+    """Shor / surface measure only ancillas, so any '1' is an alarm."""
+    return "1" in k
+
+
+def _iceberg_ancillas(k):
+    """Iceberg also measures the data; only the S_X, S_Z ancillas are checks."""
+    b = bits_of(k)
+    return bool(b[4] or b[5])
+
+
+MODELS = {
+    "shor": {
+        "module": shor_mod,
+        "title": "Shor code [[9,1,3]] under in-circuit noise",
+        "protected": "one logical qubit (memory) — Shor code [[9,1,3]]",
+        "cite": "Shor, Phys. Rev. A 52, R2493 (1995) — the [[9,1,3]] code",
+        "detector": _any_ancilla,
+    },
+    "surface": {
+        "module": surface_mod,
+        "title": "Surface code d = 3 under in-circuit noise",
+        "protected": "one logical qubit (memory) — surface code d = 3 (Z-checks)",
+        "cite": "Fowler et al., Phys. Rev. A 86, 032324 (2012) — surface codes",
+        "detector": _any_ancilla,
+    },
+    "iceberg": {
+        "module": iceberg_mod,
+        "title": "Iceberg code [[4,2,2]] under in-circuit noise",
+        "protected": "two logical qubits (detection only) — Iceberg code [[4,2,2]]",
+        "cite": "Error detection with the [[4,2,2]] code (see Module 4)",
+        "detector": _iceberg_ancillas,
+    },
+}
 
 
 def _errors(channel, p):
@@ -63,6 +97,11 @@ def run(backend, params_json="{}"):
     if not isinstance(opts, dict):
         opts = {}
 
+    model_id = str(opts.get("model") or "shor")
+    if model_id not in MODELS:
+        model_id = "shor"
+    spec = MODELS[model_id]
+
     channel = str(opts.get("channel") or "x")
     if channel not in CHANNELS:
         channel = "x"
@@ -72,22 +111,23 @@ def run(backend, params_json="{}"):
     error_qubit = None if error_qubit is None else int(error_qubit)
     error_pauli = str(opts.get("errorPauli") or "X")
 
-    qc = shor_mod.build(error_qubit, error_pauli)
+    qc = spec["module"].build(error_qubit, error_pauli)
 
     ideal = run_circuit(AerSimulator(), qc, shots)
     noisy = run_circuit(AerSimulator(noise_model=_noise_model(channel, p)), qc, shots)
     ideal = {str(k): int(v) for k, v in ideal.items()}
     noisy = {str(k): int(v) for k, v in noisy.items()}
 
+    detect = spec["detector"]
     return json.dumps({
-        "model": MODEL,
-        "title": TITLE,
-        "protected": PROTECTED,
+        "model": model_id,
+        "title": spec["title"],
+        "protected": spec["protected"],
         "channel": channel,
         "p": p,
-        "qubits": shor_mod.QUBITS,
+        "qubits": spec["module"].QUBITS,
         "shots": shots,
-        "ideal": {"counts": ideal, "detected": probability(ideal, lambda k: "1" in k)},
-        "noisy": {"counts": noisy, "detected": probability(noisy, lambda k: "1" in k)},
-        "citations": CITATIONS,
+        "ideal": {"counts": ideal, "detected": probability(ideal, detect)},
+        "noisy": {"counts": noisy, "detected": probability(noisy, detect)},
+        "citations": [spec["cite"]] + BASE_CITATIONS,
     }, ensure_ascii=False, separators=(",", ":"))

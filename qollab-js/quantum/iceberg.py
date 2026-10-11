@@ -22,8 +22,8 @@ SX_ANCILLA = 4
 SZ_ANCILLA = 5
 
 
-def run(backend, params_json="{}"):
-    shots, error_qubit, error_pauli = parse_options(params_json)
+def build(error_qubit=None, error_pauli="X"):
+    """Prepare the GHZ code state and measure both checks (shared with quantum.noise)."""
     qc = QuantumCircuit(QUBITS, QUBITS)
     qc.h(0)  # prepare a codestate: |0000> + |1111> (a 4-qubit GHZ)
     qc.cx(0, 1)
@@ -40,6 +40,12 @@ def run(backend, params_json="{}"):
         qc.cx(q, SZ_ANCILLA)
 
     qc.measure([0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5])
+    return qc
+
+
+def run(backend, params_json="{}"):
+    shots, error_qubit, error_pauli = parse_options(params_json)
+    qc = build(error_qubit, error_pauli)
     counts = run_circuit(backend, qc, shots)
     return response(MODEL, TITLE, QUBITS, shots, counts, _decode(counts))
 

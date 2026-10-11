@@ -73,9 +73,10 @@ trayectorias y ejes de rotación.
   *counts* devueltos para leer el síndrome. Fuera de Qollab esos botones quedan
   desactivados.
 - **Ruido in-circuit (Aer).** Cuando el backend es **ideal** (Built-in simulator o
-  AWS Braket), la lección de Shor construye el circuito exacto, le añade un canal de
-  ruido estándar
-  (bit-flip X, phase-flip Z o depolarizante) a cada compuerta y lo corre en un
+  AWS Braket), las lecciones de Shor (Noise Lab), Iceberg (postselección) y
+  superficie (umbral y lab de distancia) construyen el circuito exacto, le añaden un
+  canal de ruido estándar
+  (bit-flip X, phase-flip Z o depolarizante) a cada compuerta y lo corren en un
   simulador Aer clásico, comparando las distribuciones ideal y ruidosa y mostrando
   la corrección del decoder. Modelos: depolarizante (Nielsen & Chuang, 2000); errores
   X/Z independientes (Dennis, Kitaev, Landahl & Preskill, *J. Math. Phys.* **43**,

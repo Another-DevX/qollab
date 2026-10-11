@@ -175,7 +175,13 @@
     if (!host) return null;
     opts = opts || {};
     var state = { channel: opts.channel || "x", p: opts.p != null ? opts.p : 0.05 };
+    var model = opts.model || "shor";
     var CHAN = [["x", "Bit-flip X"], ["z", "Phase-flip Z"], ["depol", "Depolarizing"]];
+    var PROTECTED = {
+      shor: "one logical qubit (memory) — Shor code [[9,1,3]]",
+      surface: "one logical qubit (memory) — surface code d = 3",
+      iceberg: "two logical qubits (detection only) — Iceberg code [[4,2,2]]",
+    };
 
     host.innerHTML =
       "<div class='cnoise'>" +
@@ -231,10 +237,10 @@
       if (backendHasNoise()) {
         // The backend already carries a real device noise model: use it as is.
         status.textContent = "Running on the backend's noise model…";
-        run("shor", { shots: opts.shots || 2048 }).then(function (res) {
+        run(model, { shots: opts.shots || 2048 }).then(function (res) {
           status.textContent = res.shots + " shots · " + (backendName() || "backend") + " (device noise model)";
           out.innerHTML =
-            "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> one logical qubit (memory) — Shor code [[9,1,3]]</p></div>" +
+            "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> " + esc(PROTECTED[model] || model) + "</p></div>" +
             "<div class='caption' style='margin-top:12px'>Backend noise model · detected " + pct(res.summary && res.summary.detected) + "</div>" +
             barsHTML(res.counts, 4) +
             (res.summary && res.summary.note ? "<p class='caption' style='margin-top:6px'>" + esc(res.summary.note) + "</p>" : "");
@@ -248,7 +254,7 @@
       }
       // Ideal backend: inject our own noise channel with Aer.
       status.textContent = "Building the noisy circuit…";
-      runNoisy({ channel: state.channel, p: state.p, shots: opts.shots || 2048 }).then(function (res) {
+      runNoisy({ model: model, channel: state.channel, p: state.p, shots: opts.shots || 2048 }).then(function (res) {
         status.textContent = res.shots + " shots · " + res.channel + " @ p = " + res.p;
         out.innerHTML =
           "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> " + esc(res.protected) + "</p></div>" +

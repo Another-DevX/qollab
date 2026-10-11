@@ -75,11 +75,11 @@ export async function runModel(id, { shots = 1024, errorQubit = null, errorPauli
  * @param {number} [options.shots=1024]
  * @returns {Promise<object>} { protected, channel, p, ideal, noisy, citations }
  */
-export async function runNoisy({ channel = 'x', p = 0, shots = 2048, errorQubit = null, errorPauli = 'X' } = {}) {
+export async function runNoisy({ model = 'shor', channel = 'x', p = 0, shots = 2048, errorQubit = null, errorPauli = 'X' } = {}) {
   if (typeof backend === 'undefined') {
     throw new Error('No backend available: run this project inside Qollab.');
   }
-  const params = JSON.stringify({ channel, p, shots, errorQubit, errorPauli });
+  const params = JSON.stringify({ model, channel, p, shots, errorQubit, errorPauli });
   const proxy = await noise.run.callPromising(backend, params);
   let text;
   try {

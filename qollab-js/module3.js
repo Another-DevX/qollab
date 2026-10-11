@@ -1283,6 +1283,7 @@
       '<p>On real hardware, the measurement circuits themselves fail too, and the threshold drops to roughly 1%. In 2024 Google\'s “Willow” chip showed logical error rates decreasing from <span class="m">d</span> = 3 to 5 to 7 — the first clear demonstration of operating below threshold.</p>' +
       '<p>Everything here is a classical simulation in your browser (Pauli frames + matching), not a run on quantum hardware.</p></div></details>' +
       '</section>' +
+      '<section id="c-noise" style="margin-top:40px"></section>' +
       transitionBlock('The threshold exists. How much does each step in d actually buy?', '/lab', 'Open the distance lab');
 
     var slider = page.querySelector('#c-p');
@@ -1429,7 +1430,30 @@
       stop: function () { stop(); draw(); },
       reset: function () { stop(); st.data[st.model] = {}; st.last = null; draw(); }
     });
+
+    function mountNoiseC() {
+      var host = page.querySelector('#c-noise');
+      host.innerHTML =
+        '<div class="page-head"><div class="meta"><span class="kick">On hardware · real noise</span></div>' +
+          '<h2 class="headline" style="font-size:1.6rem">Run the surface code with in-circuit noise</h2>' +
+          '<p class="dek" style="margin-top:8px">On an ideal backend we build the exact d = 3 Z-check circuit and attach a noise channel to every gate, then run it on a classical Aer simulator. Compare the noise-free and noisy syndromes, and the decoder\'s corrected logical failure.</p></div>' +
+        '<div class="panel" style="margin-top:16px" id="c-noise-host"></div>';
+      window.CircuitRun.mountNoise(page.querySelector('#c-noise-host'), {
+        model: 'surface',
+        shots: 2048,
+        onResult: function (res, out) {
+          var dm = res.channel === 'depol' ? 'depolarizing' : 'bitflip';
+          var r = D.runTrials(3, res.p, dm, 2000, Math.random);
+          var pl = r.trials ? r.failures / r.trials : 0;
+          out.insertAdjacentHTML('beforeend',
+            '<div class="cmp-row" style="margin-top:12px"><span class="caption">Logical failure after decoding (d = 3)</span><span class="m">' + (100 * pl).toFixed(2) + '%</span></div>' +
+            '<p class="caption" style="margin-top:8px">The noisy circuit is the raw picture; the matching decoder brings the logical failure down to ' + (100 * pl).toFixed(2) + '% at this p.</p>');
+        }
+      });
+    }
+
     draw();
+    mountNoiseC();
     return function () { clearTimeout(timer); timer = null; };
   }
 
@@ -1514,6 +1538,7 @@
       '<p>For even <span class="m">d</span>, ⌊(d−1)/2⌋ is the same as for <span class="m">d − 1</span>: <span class="m">d</span> = 4 still guarantees to fix only one error. The formula still gives it a curve in between.</p>' +
       '<p>This page samples the formula; it does not simulate qubits or run a decoder. Lesson 06 does both, locally in your browser.</p></div></details>' +
       '</section>' +
+      '<section id="m-noise" style="margin-top:40px"></section>' +
       transitionBlock('Ready to wrap up what the grid taught us?', '/conclusion', 'Conclusion');
 
     var slider = page.querySelector('#m-p');
@@ -1657,7 +1682,30 @@
       sweep: function () { schedule(SWEEP); },
       reset: function () { stop(); st.data = { 3: {}, 4: {}, 5: {} }; st.hits = null; draw(); }
     });
+
+    function mountNoiseM() {
+      var host = page.querySelector('#m-noise');
+      host.innerHTML =
+        '<div class="page-head"><div class="meta"><span class="kick">On hardware · real noise</span></div>' +
+          '<h2 class="headline" style="font-size:1.6rem">Run the surface code with in-circuit noise</h2>' +
+          '<p class="dek" style="margin-top:8px">The model above samples a formula. Here we build the exact d = 3 Z-check circuit, attach a noise channel to every gate and run it on a classical Aer simulator, then decode it.</p></div>' +
+        '<div class="panel" style="margin-top:16px" id="m-noise-host"></div>';
+      window.CircuitRun.mountNoise(page.querySelector('#m-noise-host'), {
+        model: 'surface',
+        shots: 2048,
+        onResult: function (res, out) {
+          var dm = res.channel === 'depol' ? 'depolarizing' : 'bitflip';
+          var r = D.runTrials(3, res.p, dm, 2000, Math.random);
+          var pl = r.trials ? r.failures / r.trials : 0;
+          out.insertAdjacentHTML('beforeend',
+            '<div class="cmp-row" style="margin-top:12px"><span class="caption">Logical failure after decoding (d = 3)</span><span class="m">' + (100 * pl).toFixed(2) + '%</span></div>' +
+            '<p class="caption" style="margin-top:8px">The real circuit plus decoder at this p gives a logical failure of ' + (100 * pl).toFixed(2) + '%.</p>');
+        }
+      });
+    }
+
     draw();
+    mountNoiseM();
     return function () { clearTimeout(timer); timer = null; };
   }
 

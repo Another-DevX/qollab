@@ -48,8 +48,8 @@ def _z_checks(d):
     return checks
 
 
-def run(backend, params_json="{}"):
-    shots, error_qubit, error_pauli = parse_options(params_json)
+def build(error_qubit=None, error_pauli="X"):
+    """One round of the four Z-checks, as a circuit (shared with quantum.noise)."""
     checks = _z_checks(DISTANCE)
     qc = QuantumCircuit(QUBITS, len(checks))
     if error_qubit is not None:
@@ -58,8 +58,14 @@ def run(backend, params_json="{}"):
         ancilla = DATA_COUNT + k
         for q in qubits:
             qc.cx(q, ancilla)
-
     qc.measure(list(range(DATA_COUNT, QUBITS)), list(range(len(checks))))
+    return qc
+
+
+def run(backend, params_json="{}"):
+    shots, error_qubit, error_pauli = parse_options(params_json)
+    checks = _z_checks(DISTANCE)
+    qc = build(error_qubit, error_pauli)
     counts = run_circuit(backend, qc, shots)
     detected = probability(counts, lambda k: "1" in k)
     return response(

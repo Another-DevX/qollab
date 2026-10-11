@@ -499,6 +499,7 @@
             "<div id='m4-p4-extra' style='margin-top:16px'></div></div></div>" +
         "</section>" +
         "<div style='margin-top:24px' id='m4-p4-note'></div>" +
+        "<section id='m4-p4-noise' style='margin-top:40px'></section>" +
         UI.transition("05", "Can an error change logical information without being detected?", "If detection is not correction, some errors must slip through unseen. Find one.", "#/module-4/break-the-code", "Break the code →") +
       "</div>";
 
@@ -541,7 +542,27 @@
       UI.$all("#m4-p4-controls [data-ps]", root).forEach(function (b) { b.addEventListener("click", function () { st.postselect = b.getAttribute("data-ps") === "on"; update(); }); });
       UI.$sel("#m4-p4-run", root).addEventListener("click", function () { st.result = Ice.monteCarlo(st.p, st.model, st.trials, st.postselect); update(); });
     }
+    function mountNoiseP4() {
+      var host = UI.$sel("#m4-p4-noise", root);
+      host.innerHTML =
+        "<div class='page-head'><div class='meta'><span class='kick'>On hardware · real noise</span></div>" +
+          "<h2 class='headline' style='font-size:1.6rem'>Run the Iceberg circuit with in-circuit noise</h2>" +
+          "<p class='dek' style='margin-top:8px'>On an ideal backend we build the exact [[4,2,2]] detection circuit and attach a noise channel to every gate, then run it on a classical Aer simulator. Compare the noise-free and noisy syndromes, and the logical error left after postselection.</p></div>" +
+        "<div class='panel' style='margin-top:16px' id='m4-p4-noise-host'></div>";
+      window.CircuitRun.mountNoise(UI.$sel("#m4-p4-noise-host", root), {
+        model: "iceberg",
+        shots: 2048,
+        onResult: function (res, out) {
+          var ex = Ice.exact(res.p, res.channel);
+          out.insertAdjacentHTML("beforeend",
+            "<div class='cmp-row' style='margin-top:12px'><span class='caption'>Postselection acceptance</span><span class='m'>" + (100 * ex.pAccept).toFixed(1) + "%</span></div>" +
+            "<div class='cmp-row'><span class='caption'>Logical error among accepted</span><span class='m'>" + (100 * ex.logicalRate).toFixed(2) + "%</span></div>" +
+            "<p class='caption' style='margin-top:8px'>The noisy circuit is the raw picture; postselection keeps only the runs whose syndrome is trivial, leaving a logical error of " + (100 * ex.logicalRate).toFixed(2) + "%.</p>");
+        }
+      });
+    }
     update();
+    mountNoiseP4();
     return null;
   }
 
