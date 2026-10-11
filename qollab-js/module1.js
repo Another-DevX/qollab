@@ -254,9 +254,8 @@
         "</div>" +
         "<div style='margin-top:64px;border-top:1px solid var(--line);padding-top:32px'><h3 class='headline' style='font-size:1.5rem'>An operator is not a channel</h3>" +
           "<p class='dek' style='margin-top:8px'>Unitaries move pure states around the surface. Real noise can do more.</p>" +
-          "<div class='grid2' style='margin-top:24px'>" +
+          "<div style='margin-top:24px;max-width:560px'>" +
             "<div class='panel'><p class='ct'>Unitary operator</p><div class='eqbox' style='margin-top:12px'>" + mx("|ψ⟩ ↦ U |ψ⟩") + "</div><ul class='bullets'><li>Pure states stay pure.</li><li>Bloch vector keeps length 1.</li><li>A Pauli error, or any rotation.</li></ul></div>" +
-            "<div class='panel'><p class='ct'>Quantum channel</p><div class='eqbox' style='margin-top:12px'>" + mx("ρ ↦ Σ<sub>k</sub> E<sub>k</sub> ρ E<sub>k</sub><sup>†</sup>") + "</div><ul class='bullets'><li>Pure states can become mixed.</li><li>Bloch vector can shrink: " + mx("|<b>r</b>| < 1") + ".</li><li>Models decoherence and probabilistic noise.</li></ul></div>" +
           "</div>" +
           "<div style='margin-top:16px'>" + UI.expandable("Why? — Kraus operators and completeness", "A channel is written with operators " + mx("E<sub>k</sub>") + " that need not be unitary. The condition " + mx("Σ<sub>k</sub> E<sub>k</sub><sup>†</sup> E<sub>k</sub> = I") + " keeps probabilities summing to one. With a single term, " + mx("E<sub>1</sub> = U") + " recovers the unitary case — which is why one arrow on the sphere cannot capture every kind of noise.") + "</div>" +
         "</div>" +
