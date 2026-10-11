@@ -38,11 +38,11 @@
 
   var LESSONS = [
     { path: '/grid', num: '01', short: 'From a line to a grid', q: 'What if the repetition code grew in two directions?', render: renderGrid },
-    { path: '/stabilizers', num: '02', short: 'Stabilizers as tiles', q: 'Which tiles notice which errors?', render: renderStabilizers, hw: true },
+    { path: '/stabilizers', num: '02', short: 'Stabilizers as tiles', q: 'Which tiles notice which errors?', render: renderStabilizers },
     { path: '/strings', num: '03', short: 'Errors are strings, syndromes are endpoints', q: 'Why do only the ends of an error light up?', render: renderStrings },
     { path: '/decoder', num: '04', short: 'Be the decoder', q: 'Can you fix errors you cannot see?', render: renderDecoder },
     { path: '/logical', num: '05', short: 'The logical qubit', q: 'How many errors does it take to fool the code?', render: renderLogical },
-    { path: '/threshold', num: '06', short: 'The threshold', q: 'Does a bigger grid always help?', render: renderThreshold, hw: true },
+    { path: '/threshold', num: '06', short: 'The threshold', q: 'Does a bigger grid always help?', render: renderThreshold },
     { path: '/lab', num: '07', short: 'Distance lab', q: 'How much does a bigger grid buy you?', render: renderLab, hw: true },
     { path: '/conclusion', num: 'End', short: 'Conclusion', q: 'What did the grid teach us?', render: renderConclusion }
   ];
@@ -626,7 +626,6 @@
       '<div class="btn-row"><button class="btn" type="button" data-action="clear">Clear errors</button></div>' +
       '<div id="s-note" aria-live="polite"></div></div>' +
       '<div class="panel"><h3>What did you notice?</h3><div id="s-obs"></div></div>' +
-      '<div class="panel"><h3>Run the checks on the backend</h3><div id="s-run"></div></div>' +
       '</div></div>' +
       '<section class="math-section" id="s-math"></section>' +
       transitionBlock('One error lights up to two tiles. What happens when errors line up?', '/strings', 'Draw error strings');
@@ -711,49 +710,7 @@
     });
     bindActions(page, { clear: function () { st.errors = S.emptyFrame(3); st.note = null; draw(); } });
     draw();
-    mountSurfaceRun(page);
     return function () { lat.destroy(); };
-  }
-
-  /* One real backend job for this lesson: inject an X error into the d = 3 patch
-   * and read the four Z-checks. Mirrors the "surface" Python model. */
-  function dominantBits(counts) {
-    var best = null, bestN = -1;
-    Object.keys(counts || {}).forEach(function (k) { if (counts[k] > bestN) { bestN = counts[k]; best = k; } });
-    return best ? best.split('').reverse().map(Number) : [];
-  }
-  function mountSurfaceRun(page) {
-    var sr = { q: 4 };
-    var host = page.querySelector('#s-run');
-    host.innerHTML =
-      '<p class="small">Inject one <span class="m">X</span> error into the patch and read the four Z-checks on a backend. No encoding is needed: |0…0⟩ is already a +1 eigenstate of every Z-check, so the round stays silent until the error appears.</p>' +
-      '<div class="chip-row" style="margin-top:10px" id="sr-q">' +
-        [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function (q) {
-          return '<button class="chip' + (sr.q === q ? ' active' : '') + '" type="button" data-sq="' + q + '">q' + (q + 1) + '</button>';
-        }).join('') +
-      '</div>' +
-      '<div id="sr-card" style="margin-top:12px"></div>';
-    function paint() {
-      Array.prototype.slice.call(page.querySelectorAll('#sr-q [data-sq]')).forEach(function (el) {
-        el.classList.toggle('active', Number(el.getAttribute('data-sq')) === sr.q);
-      });
-    }
-    Array.prototype.slice.call(page.querySelectorAll('#sr-q [data-sq]')).forEach(function (el) {
-      el.addEventListener('click', function () { sr.q = Number(el.getAttribute('data-sq')); paint(); });
-    });
-    window.CircuitRun.mount(page.querySelector('#sr-card'), {
-      model: 'surface',
-      label: 'Run one job',
-      options: function () { return { errorQubit: sr.q, errorPauli: 'X' }; },
-      onResult: function (result, out) {
-        var bits = dominantBits(result.counts);
-        var fired = [];
-        bits.forEach(function (b, i) { if (b) fired.push(i + 1); });
-        out.insertAdjacentHTML('beforeend',
-          '<p class="small" style="margin-top:10px">Z-check syndrome (' + bits.join(', ') + '): ' +
-          (fired.length ? 'check' + (fired.length > 1 ? 's ' : ' ') + fired.join(', ') + ' lit' : 'no check fired') + '.</p>');
-      }
-    });
   }
 
   // ======================================================== 03 · strings
@@ -1264,7 +1221,7 @@
         out.innerHTML =
           '<div class="notice" style="margin-top:12px"><p><b>Protected:</b> ' + res.protected + ' · <span class="m">d</span> = ' + state.d + '</p></div>' +
           '<p class="caption" style="margin-top:8px">Ran on the Qollab backend' + (res.backend ? ' (' + res.backend + ')' : '') + ' · ' +
-            (res.mode === 'backend' ? 'device noise model' : 'ideal circuit, noise injected with Aer') + '.</p>' +
+            (res.mode === 'backend' ? 'device noise model' : 'ideal circuit, noise injected classically') + '.</p>' +
           '<div class="grid-two" style="margin-top:12px">' +
             '<div><div class="caption">' + (res.mode === 'backend' ? 'Noise-free reference (Aer)' : 'Noise-free circuit (Qollab)') + ' · detected ' + Math.round(100 * res.ideal.detected) + '%</div>' + window.CircuitRun.barsHTML(res.ideal.counts, 4) + '</div>' +
             '<div><div class="caption">' + (res.mode === 'backend' ? 'Noisy circuit (device)' : 'Noisy circuit (injected)') + ' · detected ' + Math.round(100 * res.noisy.detected) + '%</div>' + window.CircuitRun.barsHTML(res.noisy.counts, 4) + '</div>' +
@@ -1315,7 +1272,6 @@
       '<button class="btn" type="button" data-action="reset">Reset</button></div>' +
       '<div class="progressbar" aria-hidden="true"><div id="c-bar"></div></div>' +
       '<p class="small" id="c-progress" aria-live="polite"></p>' +
-      '<div id="c-aer-host" style="margin-top:18px"></div>' +
       '</div>' +
       '<div class="panel"><h3>Observations</h3><div id="c-obs" aria-live="polite"></div></div>' +
       '<div class="panel"><h3>Last trial</h3><div id="c-live" class="lat-host" style="max-width:260px"></div><p class="small" id="c-live-cap"></p></div>' +
@@ -1479,11 +1435,6 @@
     });
 
     draw();
-    surfaceNoisePanel(page, '#c-aer-host', {
-      p: function () { return st.p; },
-      channel: function () { return st.model === 'depolarizing' ? 'depol' : 'x'; },
-      distances: [3, 5, 7],
-    });
     return function () { clearTimeout(timer); timer = null; };
   }
 

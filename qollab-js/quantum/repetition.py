@@ -23,8 +23,8 @@ QUBITS = 5  # q0 q1 q2 a0 a1
 DIAGNOSIS = {(1, 0): 0, (1, 1): 1, (0, 1): 2, (0, 0): None}
 
 
-def run(backend, params_json="{}"):
-    shots, error_qubit, error_pauli = parse_options(params_json)
+def build(error_qubit=None, error_pauli="X"):
+    """The repetition-code encoding + two Z-checks (shared with quantum.noise)."""
     qc = QuantumCircuit(QUBITS, QUBITS)
     qc.cx(0, 1)  # encode
     qc.cx(0, 2)
@@ -35,7 +35,12 @@ def run(backend, params_json="{}"):
     qc.cx(1, 4)  # a1 = Z1 Z2
     qc.cx(2, 4)
     qc.measure([0, 1, 2, 3, 4], [0, 1, 2, 3, 4])
+    return qc
 
+
+def run(backend, params_json="{}"):
+    shots, error_qubit, error_pauli = parse_options(params_json)
+    qc = build(error_qubit, error_pauli)
     counts = run_circuit(backend, qc, shots)
     return response(MODEL, TITLE, QUBITS, shots, counts, _decode(counts))
 

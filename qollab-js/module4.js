@@ -506,7 +506,7 @@
         "<div class='step'><span class='caption'>Postselection</span><div class='chip-row' style='margin-top:8px'>" +
           "<button class='chip" + (st.postselect ? " active" : "") + "' type='button' data-ps='on'>On</button>" +
           "<button class='chip" + (!st.postselect ? " active" : "") + "' type='button' data-ps='off'>Off</button></div></div>" +
-        "<div class='toolbar' style='margin-top:16px'><button class='btn primary' id='m4-p4-run'>Run experiment</button><button class='btn' id='m4-p4-aer'>Run on a backend (in-circuit noise)</button>" + window.CircuitRun.hwBadge() + "</div>";
+        "<div class='toolbar' style='margin-top:16px'><button class='btn primary' id='m4-p4-run'>Run experiment</button>" + window.CircuitRun.hwBadge() + "</div>";
     }
 
     function statsHTML() {
@@ -540,13 +540,12 @@
       UI.$all("#m4-p4-controls [data-model]", root).forEach(function (b) { b.addEventListener("click", function () { st.model = b.getAttribute("data-model"); update(); }); });
       UI.$all("#m4-p4-controls [data-trials]", root).forEach(function (b) { b.addEventListener("click", function () { st.trials = Number(b.getAttribute("data-trials")); update(); }); });
       UI.$all("#m4-p4-controls [data-ps]", root).forEach(function (b) { b.addEventListener("click", function () { st.postselect = b.getAttribute("data-ps") === "on"; st.result = null; update(); }); });
-      UI.$sel("#m4-p4-run", root).addEventListener("click", function () { st.result = Ice.monteCarlo(st.p, st.model, st.trials, st.postselect); update(); });
-      UI.$sel("#m4-p4-aer", root).addEventListener("click", runAerP4);
+      UI.$sel("#m4-p4-run", root).addEventListener("click", function () { st.result = Ice.monteCarlo(st.p, st.model, st.trials, st.postselect); update(); runAerP4(); });
     }
     /* One real backend job using the noise model and p chosen above. */
     function runAerP4() {
       var out = UI.$sel("#m4-p4-aer-out", root);
-      var btn = UI.$sel("#m4-p4-aer", root);
+      var btn = UI.$sel("#m4-p4-run", root);
       if (!window.CircuitRun.available()) {
         out.innerHTML = "<div class='notice'><p>Run inside Qollab to execute this circuit on a backend.</p></div>";
         return;
@@ -558,7 +557,7 @@
         out.innerHTML =
           "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> " + res.protected + "</p></div>" +
           "<p class='caption' style='margin-top:8px'>Ran on the Qollab backend" + (res.backend ? " (" + res.backend + ")" : "") + " · " +
-            (res.mode === "backend" ? "device noise model" : "ideal circuit, noise injected with Aer") + ".</p>" +
+            (res.mode === "backend" ? "device noise model" : "ideal circuit, noise injected classically") + ".</p>" +
           "<div class='grid-two' style='margin-top:12px'>" +
             "<div><div class='caption'>" + (res.mode === "backend" ? "Noise-free reference (Aer)" : "Noise-free circuit (Qollab)") + " · detected " + Math.round(100 * res.ideal.detected) + "%</div>" + window.CircuitRun.barsHTML(res.ideal.counts, 4) + "</div>" +
             "<div><div class='caption'>" + (res.mode === "backend" ? "Noisy circuit (device)" : "Noisy circuit (injected)") + " · detected " + Math.round(100 * res.noisy.detected) + "%</div>" + window.CircuitRun.barsHTML(res.noisy.counts, 4) + "</div>" +

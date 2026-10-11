@@ -1,7 +1,8 @@
 # Python packages the Qollab runtime must install for this JS project.
-# Qiskit itself is always installed (the runtime adds it automatically).
+# Qiskit itself is always installed automatically.
 #
-# `quantum/noise.py` imports the Aer simulator to inject in-circuit noise on
-# ideal backends, so Aer has to be listed here — Qollab does not auto-install
-# packages that only the JavaScript side pulls in.
-qiskit_aer==0.17.2
+# Do NOT list `qiskit_aer`: the runtime already provides a Pyodide build, and
+# asking pip for the PyPI wheel installs a native module that fails to load
+# (ImportError: dynamic module does not define PyInit_controller_wrappers).
+# `quantum/noise.py` imports Aer lazily and degrades with a clear message when
+# it is not importable.

@@ -248,7 +248,7 @@
         out.innerHTML =
           "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> " + esc(res.protected) + "</p></div>" +
           "<p class='caption' style='margin-top:8px'>Ran on the Qollab backend" + (res.backend ? " (" + esc(res.backend) + ")" : "") + " · " +
-            (res.mode === "backend" ? "device noise model" : "ideal circuit, noise injected with Aer") + ".</p>" +
+            (res.mode === "backend" ? "device noise model" : "ideal circuit, noise injected classically") + ".</p>" +
           "<div class='grid-two' style='margin-top:12px'>" +
             "<div><div class='caption'>" + (res.mode === "backend" ? "Noise-free reference (Aer)" : "Noise-free circuit (Qollab)") + " · detected " + pct(res.ideal.detected) + "</div>" + barsHTML(res.ideal.counts, 4) + "</div>" +
             "<div><div class='caption'>" + (res.mode === "backend" ? "Noisy circuit (device)" : "Noisy circuit (injected)") + " · detected " + pct(res.noisy.detected) + "</div>" + barsHTML(res.noisy.counts, 4) + "</div>" +
