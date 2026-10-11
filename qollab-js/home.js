@@ -73,24 +73,21 @@
     return svg("0 0 108 46", body);
   }
 
-  /* 03 · a small surface-code lattice with X- and Z-type tiles. */
+  /* Surface code: a 3×3 patch of data qubits with two highlighted plaquettes. */
   function latticeMini() {
-    var xs = [22, 54, 86], ys = [16, 34, 52];
+    var n = [10, 32, 54];
     var edges = "";
-    for (var a = 0; a < 3; a++) {
-      for (var b = 0; b < 3; b++) {
-        if (b < 2) edges += "<line class='mini-line' x1='" + xs[b] + "' y1='" + ys[a] + "' x2='" + xs[b + 1] + "' y2='" + ys[a] + "'/>";
-        if (a < 2) edges += "<line class='mini-line' x1='" + xs[b] + "' y1='" + ys[a] + "' x2='" + xs[b] + "' y2='" + ys[a + 1] + "'/>";
+    for (var r = 0; r < 3; r++) {
+      for (var c = 0; c < 3; c++) {
+        if (c < 2) edges += "<line class='mini-line' x1='" + n[c] + "' y1='" + n[r] + "' x2='" + n[c + 1] + "' y2='" + n[r] + "'/>";
+        if (r < 2) edges += "<line class='mini-line' x1='" + n[c] + "' y1='" + n[r] + "' x2='" + n[c] + "' y2='" + n[r + 1] + "'/>";
       }
     }
+    var tile = function (cx, cy, cls) { return "<rect class='mini-tile " + cls + "' x='" + (cx - 8) + "' y='" + (cy - 8) + "' width='16' height='16' rx='3'/>"; };
+    var tiles = tile(21, 21, "") + tile(43, 21, "z");
     var nodes = "";
-    for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) nodes += "<circle class='mini-node' cx='" + xs[j] + "' cy='" + ys[i] + "' r='3'/>";
-    return svg("0 0 108 66",
-      edges +
-      "<rect class='mini-tile' x='33' y='22' width='30' height='20' rx='2'/>" +
-      "<rect class='mini-tile z' x='57' y='22' width='30' height='20' rx='2'/>" +
-      nodes
-    );
+    for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) nodes += "<circle class='mini-node' cx='" + n[j] + "' cy='" + n[i] + "' r='2.6'/>";
+    return svg("0 0 64 64", edges + tiles + nodes);
   }
 
   /* Iceberg code: a detection graph — one check above, one below, five qubits between. */
