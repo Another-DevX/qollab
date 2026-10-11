@@ -9,12 +9,15 @@
  * Randomness comes from a seeded generator, so rounds are reproducible.
  */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) {
-    module.exports = factory(require('./surface.js'), require('./decoder.js'));
+  var Game;
+  if (typeof module === 'object' && module.exports && typeof require === 'function') {
+    Game = factory(require('./surface.js'), require('./decoder.js'));
   } else {
-    root.Game = factory(root.Surface, root.Decoder);
+    Game = factory(root.Surface, root.Decoder);
   }
-})(typeof self !== 'undefined' ? self : this, function (Surface, Decoder) {
+  if (typeof module === 'object' && module.exports) module.exports = Game;
+  root.Game = Game;
+})(typeof self !== 'undefined' ? self : globalThis, function (Surface, Decoder) {
   'use strict';
 
   var LEVELS = [

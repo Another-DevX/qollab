@@ -10,8 +10,24 @@
   "use strict";
 
   var UI = global.UI;
-  var Ice = global.createIceberg(global.Q);
+  var createIceberg = global.createIceberg;
+  if (typeof createIceberg !== "function" && typeof require === "function") {
+    createIceberg = require("./iceberg.js");
+  }
+  if (typeof createIceberg !== "function") {
+    throw new Error("Module 4 requires iceberg.js to expose createIceberg before initialization.");
+  }
+  var Q = global.Q;
+  if ((!Q || typeof Q.buildPauliOp !== "function") && typeof require === "function") {
+    Q = require("./quantum.js");
+  }
+  if (!Q || typeof Q.buildPauliOp !== "function") {
+    throw new Error("Module 4 requires quantum.js to expose the Q API before initialization.");
+  }
+  var Ice = createIceberg(Q);
   var IQ = global.IcebergQuiz;
+  if (!IQ && typeof require === "function") IQ = require("./icebergquiz.js");
+  if (!IQ) throw new Error("Module 4 requires icebergquiz.js before initialization.");
 
   var SUB = ["₁", "₂", "₃", "₄"];
   var PAULI_CLASS = { X: "pX", Y: "pY", Z: "pZ", I: "" };

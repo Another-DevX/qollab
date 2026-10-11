@@ -7,7 +7,9 @@
 (function (global) {
   "use strict";
 
-  var createQuiz = (typeof module !== "undefined" && module.exports) ? require("./quizbase.js") : global.createQuiz;
+  var createQuiz = (typeof module !== "undefined" && module.exports && typeof require === "function")
+    ? require("./quizbase.js")
+    : global.createQuiz;
 
   var QUESTIONS = [
     {
@@ -85,5 +87,5 @@
   var Quiz = createQuiz(QUESTIONS);
 
   if (typeof module !== "undefined" && module.exports) module.exports = Quiz;
-  else global.IcebergQuiz = Quiz;
+  global.IcebergQuiz = Quiz;
 })(typeof window !== "undefined" ? window : globalThis);

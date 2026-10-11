@@ -14,9 +14,12 @@
  * possible and flips the qubits along the chosen paths.
  */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory(require('./surface.js'));
-  else root.Decoder = factory(root.Surface);
-})(typeof self !== 'undefined' ? self : this, function (Surface) {
+  var Decoder = typeof module === 'object' && module.exports && typeof require === 'function'
+    ? factory(require('./surface.js'))
+    : factory(root.Surface);
+  if (typeof module === 'object' && module.exports) module.exports = Decoder;
+  root.Decoder = Decoder;
+})(typeof self !== 'undefined' ? self : globalThis, function (Surface) {
   'use strict';
 
   var EXACT_LIMIT = 14; // bitmask DP up to 2^14 states per decode

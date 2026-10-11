@@ -140,5 +140,5 @@
   }
 
   if (typeof module !== "undefined" && module.exports) module.exports = createNoise;
-  else global.createNoise = createNoise;
+  global.createNoise = createNoise;
 })(typeof window !== "undefined" ? window : globalThis);

@@ -99,5 +99,5 @@
   }
 
   if (typeof module !== "undefined" && module.exports) module.exports = createDetective;
-  else global.createDetective = createDetective;
+  global.createDetective = createDetective;
 })(typeof window !== "undefined" ? window : globalThis);

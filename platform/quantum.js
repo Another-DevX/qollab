@@ -166,5 +166,5 @@
   };
 
   if (typeof module !== "undefined" && module.exports) module.exports = Q;
-  else global.Q = Q;
+  global.Q = Q;
 })(typeof window !== "undefined" ? window : globalThis);

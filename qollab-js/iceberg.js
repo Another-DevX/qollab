@@ -271,5 +271,5 @@
   }
 
   if (typeof module !== "undefined" && module.exports) module.exports = createIceberg;
-  else global.createIceberg = createIceberg;
+  global.createIceberg = createIceberg;
 })(typeof window !== "undefined" ? window : globalThis);

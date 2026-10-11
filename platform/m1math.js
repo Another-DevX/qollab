@@ -275,5 +275,5 @@
   };
 
   if (typeof module !== "undefined" && module.exports) module.exports = M1;
-  else global.M1 = M1;
+  global.M1 = M1;
 })(typeof window !== "undefined" ? window : globalThis);
