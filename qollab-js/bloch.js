@@ -30,6 +30,7 @@
   function vNorm(a) { var l = vLen(a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
   function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
   function finiteVec(v) { return v && v.length === 3 && isFinite(v[0]) && isFinite(v[1]) && isFinite(v[2]); }
+  function finiteNum(n) { return typeof n === "number" && isFinite(n); }
   function slerp(a, b, t) {
     var d = clamp(vDot(a, b), -1, 1);
     if (d > 0.9995) return vNorm([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]);
@@ -41,14 +42,32 @@
   function BlochSphere(canvas) {
     this.canvas = canvas; this.ctx = canvas.getContext("2d");
     this.view = { azim: 0.95, elev: 0.36, dist: 3.2 };
-    this.arrows = []; this.running = false; this._attached = false; this._drag = false; this._last = [0, 0]; this._raf = 0;
+    this.arrows = []; this.running = false; this._attached = false; this._drag = false; this._last = null; this._lastT = 0; this._raf = 0;
     /* Caches so a frame never rebuilds static geometry, the camera basis or the
-       sphere gradient; `_dirty` skips drawing entirely while nothing changes. */
+       sphere gradient; `_dirty` skips drawing entirely while nothing changes.
+       `_last` holds drag coordinates; `_lastT` holds the frame timestamp. They are
+       kept separate on purpose: the animation loop used to overwrite the drag
+       coordinates with the timestamp, which poisoned the view with NaN. */
     this._geo = {}; this._grad = null; this._gradKey = ""; this._dirty = true;
     var self = this;
-    this._down = function (e) { self._drag = true; self._last = [e.clientX, e.clientY]; if (canvas.setPointerCapture) { try { canvas.setPointerCapture(e.pointerId); } catch (x) {} } };
-    this._move = function (e) { if (!self._drag) return; var dx = e.clientX - self._last[0], dy = e.clientY - self._last[1]; self._last = [e.clientX, e.clientY]; self.view.azim -= dx * 0.008; self.view.elev = clamp(self.view.elev + dy * 0.008, -1.35, 1.35); self._dirty = true; };
-    this._up = function () { self._drag = false; };
+    this._down = function (e) {
+      if (!finiteNum(e.clientX) || !finiteNum(e.clientY)) return;
+      self._drag = true; self._last = [e.clientX, e.clientY];
+      if (canvas.setPointerCapture) { try { canvas.setPointerCapture(e.pointerId); } catch (x) {} }
+      if (e.preventDefault) e.preventDefault();
+    };
+    this._move = function (e) {
+      if (!self._drag) return;
+      if (!finiteNum(e.clientX) || !finiteNum(e.clientY)) { self._last = null; return; }
+      if (!self._last) { self._last = [e.clientX, e.clientY]; return; }
+      var dx = e.clientX - self._last[0], dy = e.clientY - self._last[1];
+      self._last = [e.clientX, e.clientY];
+      if (!finiteNum(dx) || !finiteNum(dy)) return;
+      self.view.azim -= dx * 0.008;
+      self.view.elev = clamp(self.view.elev + dy * 0.008, -1.35, 1.35);
+      self._dirty = true;
+    };
+    this._up = function () { self._drag = false; self._last = null; };
     this._wheel = function (e) { e.preventDefault(); self.view.dist = clamp(self.view.dist + e.deltaY * 0.0015, 2.3, 5.5); self._dirty = true; };
     this._tick = function (now) { self._frame(now); };
     this.resize();
@@ -82,9 +101,12 @@
       this.canvas.addEventListener("pointerdown", this._down);
       global.addEventListener("pointermove", this._move);
       global.addEventListener("pointerup", this._up);
+      global.addEventListener("pointercancel", this._up);
+      global.addEventListener("blur", this._up);
+      this.canvas.addEventListener("lostpointercapture", this._up);
       this.canvas.addEventListener("wheel", this._wheel, { passive: false });
     }
-    this.resize(); this._last = performance.now(); this._raf = requestAnimationFrame(this._tick);
+    this.resize(); this._lastT = performance.now(); this._raf = requestAnimationFrame(this._tick);
   };
   BlochSphere.prototype.stop = function () {
     this.running = false; if (this._raf) cancelAnimationFrame(this._raf); this._raf = 0;
@@ -93,11 +115,15 @@
       this.canvas.removeEventListener("pointerdown", this._down);
       global.removeEventListener("pointermove", this._move);
       global.removeEventListener("pointerup", this._up);
+      global.removeEventListener("pointercancel", this._up);
+      global.removeEventListener("blur", this._up);
+      this.canvas.removeEventListener("lostpointercapture", this._up);
       this.canvas.removeEventListener("wheel", this._wheel);
     }
     if (this._ro) { this._ro.disconnect(); this._ro = null; }
   };
   BlochSphere.prototype._basis = function () {
+    if (!finiteNum(this.view.azim) || !finiteNum(this.view.elev) || !finiteNum(this.view.dist)) { this.view.azim = 0.95; this.view.elev = 0.36; this.view.dist = 3.2; }
     var v = this.view, ce = Math.cos(v.elev), se = Math.sin(v.elev), ca = Math.cos(v.azim), sa = Math.sin(v.azim);
     var z = vNorm([v.dist * ce * ca, v.dist * ce * sa, v.dist * se]);
     var x = vCross([0, 0, 1], z); if (vLen(x) < 1e-6) x = [1, 0, 0]; x = vNorm(x);
@@ -110,7 +136,7 @@
     return { x: this.w / 2 + X * persp * r, y: this.h / 2 - Y * persp * r, z: Z };
   };
   BlochSphere.prototype._frame = function (now) {
-    var dt = Math.min(0.05, (now - this._last) / 1000); this._last = now;
+    var dt = Math.min(0.05, (now - this._lastT) / 1000); this._lastT = now;
     var t = REDUCE ? 1 : 1 - Math.exp(-dt * 7);
     var moving = false;
     for (var i = 0; i < this.arrows.length; i++) {
