@@ -218,7 +218,6 @@
   var COMPARISON = [
     { title: "Linear combination", tex: "E = a I + b X + c Y + d Z", line: "One operator, built from complex coefficients." },
     { title: "Sequential application", tex: "X Y = iZ ≠ X + Y", line: "Applying operators in turn is a product, not a sum." },
-    { title: "Probabilistic mixture", tex: "ρ′ = Σ<sub>k</sub> p<sub>k</sub> E<sub>k</sub> ρ E<sub>k</sub><sup>†</sup>", line: "“X with probability p” is a channel, not an operator." },
   ];
   function axisFromSpherical(theta, phi) { return { x: Math.sin(theta) * Math.cos(phi), y: Math.sin(theta) * Math.sin(phi), z: Math.cos(theta) }; }
 
@@ -236,7 +235,7 @@
           "</div>" +
           "<div class='grid2'>" + ["I", "X", "Y", "Z"].map(function (n) { return "<div class='quiet' style='display:flex;align-items:center;justify-content:center;min-height:64px'>" + UI.matrixHTML(M.PAULI_MATRICES[n], { label: n + " =", digits: 0, highlight: true, accent: pal.original }) + "</div>"; }).join("") + "</div>" +
         "</div>" +
-        "<div class='grid3' style='margin-top:40px'>" + COMPARISON.map(function (b) { return "<div class='cmpblock'><p class='ct'>" + b.title + "</p><div class='eqbox'>" + mx(b.tex) + "</div><p class='cl'>" + b.line + "</p></div>"; }).join("") + "</div>" +
+        "<div class='grid2' style='margin-top:40px'>" + COMPARISON.map(function (b) { return "<div class='cmpblock'><p class='ct'>" + b.title + "</p><div class='eqbox'>" + mx(b.tex) + "</div><p class='cl'>" + b.line + "</p></div>"; }).join("") + "</div>" +
         "<div style='margin-top:64px'><h3 class='headline' style='font-size:1.5rem'>Rotations live in the basis too</h3>" +
           "<p class='dek' style='margin-top:8px'>A rotation of angle α about the unit axis " + mx("<b>n</b>") + " is a Pauli combination.</p>" +
           "<div style='margin-top:24px'>" + UI.eq(mx("R<sub><b>n</b></sub>(α) = cos(α/2) I − i sin(α/2) (n<sub>x</sub> X + n<sub>y</sub> Y + n<sub>z</sub> Z)")) + "</div>" +
