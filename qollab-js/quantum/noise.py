@@ -126,6 +126,15 @@ def _classical_counts(model_id, d, channel, p, shots, rng):
     return counts
 
 
+def _backend_has_noise(backend):
+    """True when the injected backend already carries a device noise model."""
+    try:
+        name = str(getattr(backend, "name", "") or "").lower()
+    except Exception:  # noqa: BLE001
+        name = ""
+    return any(k in name for k in ("ibm", "ionq", "fake", "noise"))
+
+
 def _build(model_id, d, error_qubit, error_pauli):
     if model_id == "surface":
         return surface_mod.build(d, error_qubit, error_pauli)
@@ -162,8 +171,11 @@ def run(backend, params_json="{}"):
     error_pauli = str(opts.get("errorPauli") or "X")
 
     d = int(opts.get("d") or 3)
-    if model_id == "surface" and (d < 3 or d % 2 == 0):
-        d = 3
+    if model_id == "surface":
+        if d < 3:
+            d = 3
+        if d % 2 == 0:
+            d -= 1  # surface codes are odd-distance
 
     qc = _build(model_id, d, error_qubit, error_pauli)
     n_q = qc.num_qubits if qc is not None else 0
@@ -179,21 +191,29 @@ def run(backend, params_json="{}"):
 
     # A real job only if the backend can hold the circuit (the built-in simulator
     # tops out at 24 qubits). Otherwise the whole run is local.
+    has_device = _backend_has_noise(backend) if backend is not None else False
     fits = backend is not None and qc is not None and (backend_qubits == 0 or n_q <= backend_qubits)
-    if fits:
-        ideal = run_circuit(backend, qc, shots)
-        ideal = {str(k): int(v) for k, v in ideal.items()}
+
+    if fits and has_device:
+        noisy = run_circuit(backend, qc, shots)   # the device noise model is the noise
+        ideal = _classical_counts(model_id, d, "x", 0.0, shots, random.Random(0))
         mode = "backend"
+    elif fits:
+        ideal = run_circuit(backend, qc, shots)    # ideal backend: the job is the noise-free run
+        noisy = _classical_counts(model_id, d, channel, p, shots, random.Random())
+        mode = "injected"
     else:
         ideal = _classical_counts(model_id, d, "x", 0.0, shots, random.Random(0))
+        noisy = _classical_counts(model_id, d, channel, p, shots, random.Random())
         mode = "local"
+
+    ideal = {str(k): int(v) for k, v in ideal.items()}
+    noisy = {str(k): int(v) for k, v in noisy.items()}
 
     note = None
     if not fits and backend is not None and backend_qubits:
         note = ("This circuit needs " + str(n_q) + " qubits, more than the backend's " +
                 str(backend_qubits) + " — simulated locally, not on hardware.")
-
-    noisy = _classical_counts(model_id, d, channel, p, shots, random.Random())
 
     detect = spec["detector"]
     return json.dumps({

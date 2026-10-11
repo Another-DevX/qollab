@@ -1182,58 +1182,6 @@
     return out.join('');
   }
 
-  /* Shared "run the surface code on a backend" panel: a distance selector plus
-   * a run button that uses the lab's physical error rate p and noise model. */
-  function surfaceNoisePanel(page, hostSel, opts) {
-    var host = page.querySelector(hostSel);
-    if (!host) return;
-    var ds = opts.distances || [3, 5, 7];
-    var state = { d: ds[0] };
-    host.innerHTML =
-      '<p class="caption">Pick a code distance. The circuit uses the physical error rate p and the noise model chosen above, and runs on the Qollab backend you selected.</p>' +
-      '<div class="chip-row" style="margin-top:8px" data-sd>' + ds.map(function (d) {
-        return '<button class="chip' + (state.d === d ? ' active' : '') + '" type="button" data-d="' + d + '"><span class="m">d</span> = ' + d + '</button>';
-      }).join('') + '</div>' +
-      '<div class="toolbar" style="margin-top:12px"><button class="btn primary" data-srun>Run this distance on a backend</button>' +
-        window.CircuitRun.hwBadge() + '<span class="caption" data-sstatus></span></div>' +
-      '<div data-sout></div>';
-    var out = host.querySelector('[data-sout]');
-    var status = host.querySelector('[data-sstatus]');
-    var btn = host.querySelector('[data-srun]');
-    function paint() {
-      Array.prototype.slice.call(host.querySelectorAll('[data-sd] [data-d]')).forEach(function (b) {
-        b.classList.toggle('active', Number(b.getAttribute('data-d')) === state.d);
-      });
-    }
-    Array.prototype.slice.call(host.querySelectorAll('[data-sd] [data-d]')).forEach(function (b) {
-      b.addEventListener('click', function () { state.d = Number(b.getAttribute('data-d')); paint(); });
-    });
-    if (!window.CircuitRun.available()) status.textContent = 'Run inside Qollab.';
-    btn.addEventListener('click', function () {
-      var p = opts.p(), channel = opts.channel();
-      btn.disabled = true;
-      out.innerHTML = '<p class="caption">Submitting…</p>';
-      window.CircuitRun.runNoisy({ model: 'surface', d: state.d, channel: channel, p: p, shots: 2048 }).then(function (res) {
-        var dm = channel === 'depol' ? 'depolarizing' : 'bitflip';
-        var r = D.runTrials(state.d, p, dm, 2000, Math.random);
-        var pl = r.trials ? r.failures / r.trials : 0;
-        status.textContent = res.shots + ' shots · d = ' + state.d + ' · ' + channel + ' @ p = ' + res.p + (res.backend ? ' · ' + res.backend : '');
-        out.innerHTML =
-          '<div class="notice" style="margin-top:12px"><p><b>Protected:</b> ' + res.protected + ' · <span class="m">d</span> = ' + state.d + '</p></div>' +
-          window.CircuitRun.runLine(res) +
-          '<div class="grid-two" style="margin-top:12px">' +
-            '<div><div class="caption">' + (res.mode === 'backend' ? 'Noise-free reference (Aer)' : 'Noise-free circuit (Qollab)') + ' · detected ' + Math.round(100 * res.ideal.detected) + '%</div>' + window.CircuitRun.barsHTML(res.ideal.counts, 4) + '</div>' +
-            '<div><div class="caption">' + (res.mode === 'backend' ? 'Noisy circuit (device)' : 'Noisy circuit (injected)') + ' · detected ' + Math.round(100 * res.noisy.detected) + '%</div>' + window.CircuitRun.barsHTML(res.noisy.counts, 4) + '</div>' +
-          '</div>' +
-          '<div class="cmp-row" style="margin-top:12px"><span class="caption">Logical failure after decoding (<span class="m">d</span> = ' + state.d + ', p = ' + res.p + ')</span><span class="m">' + (100 * pl).toFixed(2) + '%</span></div>' +
-          '<p class="caption" style="margin-top:8px">Below threshold a bigger <span class="m">d</span> lowers the logical failure — the same decoder the chart above uses.</p>';
-      }).catch(function (err) {
-        status.textContent = '';
-        out.innerHTML = '<div class="notice"><p>' + ((err && err.message) || err) + '</p></div>';
-      }).then(function () { btn.disabled = false; });
-    });
-  }
-
   function renderThreshold(page) {
     var st = {
       p: 0.05, model: 'bitflip', ds: { 3: true, 5: true, 7: true }, trials: 1000, log: false,
@@ -1500,7 +1448,7 @@
       '<button class="btn" type="button" data-action="reset">Reset</button></div>' +
       '<div class="progressbar" aria-hidden="true"><div id="m-bar"></div></div>' +
       '<p class="small" id="m-progress" aria-live="polite"></p>' +
-      '<div id="m-aer-host" style="margin-top:18px"></div>' +
+      '<div id="m-aer-out" style="margin-top:18px"></div>' +
       '</div>' +
       '<div class="panel"><h3>Readouts</h3><div id="m-read" aria-live="polite"></div></div>' +
       '<div class="panel"><h3>Observations</h3><div id="m-obs" aria-live="polite"></div></div>' +
@@ -1658,17 +1606,39 @@
       if (name === 'trials') { st.trials = +value; setPressed(page, 'trials', value); }
     });
     bindActions(page, {
-      run: function () { schedule([st.p]); },
+      run: function () { schedule([st.p]); runSurfaceBackend(); },
       sweep: function () { schedule(SWEEP); },
       reset: function () { stop(); st.data = { 3: {}, 4: {}, 5: {} }; st.hits = null; draw(); }
     });
 
+    function decodedFailure(d, p) {
+      var r = D.runTrials(d, p, 'bitflip', 2000, Math.random);
+      return r.trials ? r.failures / r.trials : 0;
+    }
+    /* One real backend job for the selected distance, at the lab's p. Falls back
+     * to a local simulation when the circuit does not fit on the backend. */
+    function runSurfaceBackend() {
+      var out = page.querySelector('#m-aer-out');
+      var btn = page.querySelector('[data-action="run"]');
+      if (!window.CircuitRun.available()) { out.innerHTML = "<p class='caption'>Run inside Qollab to execute this circuit.</p>"; return; }
+      var d = st.d % 2 === 0 ? st.d - 1 : st.d;
+      out.innerHTML = "<p class='caption'>Submitting…</p>";
+      if (btn) btn.disabled = true;
+      window.CircuitRun.runNoisy({ model: 'surface', d: d, channel: 'x', p: st.p, shots: 2048 }).then(function (res) {
+        out.innerHTML =
+          '<div class="notice" style="margin-top:8px"><p><b>Protected:</b> ' + res.protected + ' · <span class="m">d</span> = ' + d + '</p></div>' +
+          window.CircuitRun.runLine(res) +
+          '<div class="grid-two" style="margin-top:12px">' +
+            '<div><div class="caption">' + (res.mode === 'backend' ? 'Noise-free reference' : 'Noise-free circuit (Qollab)') + ' · detected ' + Math.round(100 * res.ideal.detected) + '%</div>' + window.CircuitRun.barsHTML(res.ideal.counts, 4) + '</div>' +
+            '<div><div class="caption">' + (res.mode === 'backend' ? 'Noisy circuit (device)' : 'Noisy circuit (injected)') + ' · detected ' + Math.round(100 * res.noisy.detected) + '%</div>' + window.CircuitRun.barsHTML(res.noisy.counts, 4) + '</div>' +
+          '</div>' +
+          '<div class="cmp-row" style="margin-top:12px"><span class="caption">Logical failure after decoding (<span class="m">d</span> = ' + d + ', p = ' + res.p + ')</span><span class="m">' + (100 * decodedFailure(d, res.p)).toFixed(2) + '%</span></div>';
+      }).catch(function (err) {
+        out.innerHTML = '<div class="notice"><p>' + ((err && err.message) || err) + '</p></div>';
+      }).then(function () { if (btn) btn.disabled = false; });
+    }
+
     draw();
-    surfaceNoisePanel(page, '#m-aer-host', {
-      p: function () { return st.p; },
-      channel: function () { return 'x'; },
-      distances: [3, 5],
-    });
     return function () { clearTimeout(timer); timer = null; };
   }
 

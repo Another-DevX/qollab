@@ -67,6 +67,8 @@ export function run(backend, params) {
     protected: "logical qubit (memory) \u2014 local preview stub",
     channel: p.channel || "x",
     p: p.p || 0,
+    d: p.d || 3,
+    mode: "injected",
     ideal: { counts: { "00000": shots }, detected: 0 },
     noisy: { counts: { "00000": Math.round(shots * 0.3), "00001": Math.round(shots * 0.7) }, detected: 0.7 },
     citations: ["Local preview stub \u2014 no real noise model."],
