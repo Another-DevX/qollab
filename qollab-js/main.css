@@ -457,6 +457,7 @@
   .shor-zlink.hl{stroke:var(--accent-2)}
   .shor-xrect{fill:none; stroke:var(--accent-2); stroke-width:1.5; stroke-dasharray:4 3}
   .shor-badge rect{stroke-width:1.5}
+  .shor-badge{pointer-events:none}
   .shor-badge.err rect{fill:color-mix(in srgb, var(--bad) 12%, transparent); stroke:var(--bad)}
   .shor-badge.err text{fill:var(--bad)}
   .shor-badge.fix rect{fill:color-mix(in srgb, var(--accent) 12%, transparent); stroke:var(--accent)}

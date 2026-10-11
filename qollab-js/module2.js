@@ -789,8 +789,11 @@
         var cls = "shor-qubit" + (err ? " err" : fix ? " fix" : isHl ? " hl" : o.sel === q ? " sel" : stageCls);
         s += "<g class='shor-hit' data-q='" + q + "'><circle class='" + cls + "' cx='" + x + "' cy='" + y + "' r='" + r + "'/>" +
           "<text class='shor-q' x='" + x + "' y='" + (y + 4) + "' text-anchor='middle'>q" + (q + 1) + "</text></g>";
-        if (err) s += shorBadge(x - (fix ? 18 : 0), y + r + 20, err.pauli, "err");
-        if (fix) s += shorBadge(x + (err ? 18 : 0), y + r + 20, fix.pauli, "fix");
+        // Error/correction labels sit *beside* the qubit (vertically centred) so
+        // they never collide with the next qubit in the column or the block edge.
+        if (err && fix) { s += shorBadge(x - r - 17, y, err.pauli, "err") + shorBadge(x + r + 17, y, fix.pauli, "fix"); }
+        else if (err) s += shorBadge(x + r + 17, y, err.pauli, "err");
+        else if (fix) s += shorBadge(x + r + 17, y, fix.pauli, "fix");
       }
     }
     if (stage === 0) s += "<text class='shor-input-label' x='" + cols[0] + "' y='" + (rows[0] - r - 8) + "' text-anchor='middle'>input</text>";
