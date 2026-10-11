@@ -93,20 +93,18 @@
     );
   }
 
-  /* 04 · the four-qubit [[4,2,2]] code: one X-type and one Z-type stabilizer. */
+  /* Iceberg code: a detection graph — one check above, one below, five qubits between. */
   function icebergMini() {
-    var dot = function (x) { return "<circle class='mini-node' cx='" + x + "' cy='28' r='3.4'/>"; };
-    return svg("0 0 108 52",
-      dot(20) + dot(42) + dot(66) + dot(88) +
-      "<line class='mini-dash' x1='20' y1='12' x2='88' y2='12'/>" +
-      "<line class='mini-line' x1='20' y1='44' x2='88' y2='44'/>" +
-      "<line class='mini-line' x1='20' y1='15' x2='20' y2='25'/>" +
-      "<line class='mini-line' x1='88' y1='15' x2='88' y2='25'/>" +
-      "<line class='mini-line' x1='20' y1='31' x2='20' y2='41'/>" +
-      "<line class='mini-line' x1='88' y1='31' x2='88' y2='41'/>" +
-      "<text class='mini-label' x='10' y='15' text-anchor='end'>S</text>" +
-      "<text class='mini-label' x='10' y='47' text-anchor='end'>S</text>"
-    );
+    var mid = [8, 23, 38, 53, 68], my = 32;
+    var body = "";
+    for (var i = 0; i < mid.length; i++) {
+      body += "<line class='ln' x1='38' y1='8' x2='" + mid[i] + "' y2='" + my + "'/>";
+      body += "<line class='ln' x1='" + mid[i] + "' y1='" + my + "' x2='38' y2='56'/>";
+    }
+    body += "<circle class='n' cx='38' cy='8' r='6'/>";
+    for (i = 0; i < mid.length; i++) body += "<circle class='n' cx='" + mid[i] + "' cy='" + my + "' r='5'/>";
+    body += "<circle class='n solid' cx='38' cy='56' r='7'/>";
+    return svg("0 0 76 64", body, "fig-nodes");
   }
 
   var FIGS = { errors: blochMini, shor: shorMini, iceberg: icebergMini, surface: latticeMini };
@@ -132,7 +130,7 @@
         "<div class='home-split'>" +
           "<section class='home-cover' aria-label='Introduction'>" +
             "<p class='eyebrow'>Interactive quantum learning</p>" +
-            "<h1 class='headline home-title'>Quantum<br>Error Correction and Detection</h1>" +
+            "<h1 class='headline home-title'>Quantum Error<br>Correction and Detection</h1>" +
             "<p class='home-sub'>Explore quantum errors, build codes, and learn how quantum information survives noise.</p>" +
             "<figure class='home-figure'>" + heroBloch() +
               "<figcaption class='home-figure-cap'><span class='m'>|&psi;&rang; = &alpha;|0&rang; + &beta;|1&rang;</span></figcaption>" +

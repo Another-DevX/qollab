@@ -352,6 +352,10 @@
   .mini-tile.z{fill:color-mix(in srgb, var(--accent-2) 9%, transparent); stroke:var(--accent-2); stroke-dasharray:3 2}
   .mini-dash{stroke:var(--accent); stroke-width:1.1; stroke-dasharray:4 3; fill:none}
   .mini-label{fill:var(--faint); font-family:var(--mono); font-style:normal; font-size:7px}
+  /* Iceberg card icon: detection graph (platform tokens). */
+  .fig-nodes .ln{stroke:var(--accent); stroke-width:1.6; fill:none}
+  .fig-nodes .n{fill:color-mix(in srgb, var(--accent) 16%, var(--surface-2)); stroke:var(--accent); stroke-width:1.4}
+  .fig-nodes .n.solid{fill:var(--accent)}
 
   /* Desktop: keep the cover and the four cards inside one viewport where it fits. */
   @media (min-width:980px) and (min-height:701px){
