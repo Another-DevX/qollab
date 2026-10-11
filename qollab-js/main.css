@@ -219,6 +219,19 @@
   .circuit .lbl-fix{fill:var(--accent)}
   .circuit .qnum{fill:var(--faint)}
 
+  /* ---------- "Run on the backend" card (circuit-run.js) ---------- */
+  .crun .crun-bar-row{display:flex; flex-wrap:wrap; align-items:center; gap:10px}
+  .crun .crun-out{margin-top:12px}
+  .crun .crun-out:empty{display:none}
+  .crun-bars{display:flex; flex-direction:column; gap:6px}
+  .crun-bar{display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px}
+  .crun-key{font-size:12px; color:var(--muted); letter-spacing:.04em}
+  .crun-track{height:8px; border-radius:5px; background:color-mix(in srgb, var(--surface-3) 70%, transparent); overflow:hidden}
+  .crun-fill{display:block; height:100%; border-radius:5px; background:color-mix(in srgb, var(--accent) 75%, transparent)}
+  .crun-count{font-size:12px; color:var(--faint); min-width:3ch; text-align:right}
+  .crun-sum{margin-top:10px}
+  .crun-note{margin-top:4px}
+
   /* ---------- Parity diagram ---------- */
   .parity{width:100%; height:auto; display:block}
   .pq-node{fill:var(--surface-2); stroke:var(--line); stroke-width:1.5}

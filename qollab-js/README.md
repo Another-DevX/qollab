@@ -59,14 +59,22 @@ trayectorias y ejes de rotación.
 | `surface.js`, `decoder.js`, `game.js`, `mock.js` | Física del Módulo 3: código de superficie (marco de Pauli), decodificador MWPM, juego "sé el decodificador" y modelo ilustrativo del laboratorio de distancia. |
 | `module3.js` | Páginas del Módulo 3 (DOM, SVG de la grilla, eventos). |
 | `errorslab/` | Laboratorio de errores sistemáticos: `entry.js` (montaje) + `model/`, `ui/`, `views/` (three.js) + `i18n/`. |
+| `circuits.js` | Puente JS ↔ Python: `runModel(id, opts)` ejecuta un circuito de `quantum/*.py` en el backend. Expone `window.QollabCircuits`. |
+| `circuit-run.js` | Tarjeta compartida *Run on the backend*: botón + histograma de *counts*; importa `circuits.js` de forma perezosa y se desactiva fuera de Qollab. Expone `window.CircuitRun`. |
+| `quantum/*.py` | Circuitos Qiskit reales (`bell`, `repetition`, `phase_flip`, `shor`, `surface`, `iceberg`) + `common.py`. |
 
 ## Honestidad sobre la simulación
 
-- **Nada corre en hardware cuántico.** Todas las simulaciones son clásicas, en el
-  navegador. El Módulo 3 usa un **modelo de marco de Pauli**: exacto para errores
-  y correcciones de Pauli, pero no un simulador cuántico universal. Supone ruido
-  de *capacidad de código* (los errores sólo afectan a los cúbits de datos y los
-  síndromes se miden perfectamente); su umbral de *bit-flip* ronda el 10%.
+- **Las animaciones son clásicas, pero los circuitos se pueden ejecutar de verdad.**
+  Dentro de Qollab, los botones *Run on the backend* (por ejemplo en la lección de
+  repetición y en la construcción del código de Shor) envían el circuito exacto de
+  `quantum/*.py` a un backend y usan los *counts* devueltos para leer el síndrome.
+  Fuera de Qollab esos botones quedan desactivados.
+- **El resto de las simulaciones son clásicas, en el navegador.** El Módulo 3 usa
+  un **modelo de marco de Pauli**: exacto para errores y correcciones de Pauli,
+  pero no un simulador cuántico universal. Supone ruido de *capacidad de código*
+  (los errores sólo afectan a los cúbits de datos y los síndromes se miden
+  perfectamente); su umbral de *bit-flip* ronda el 10%.
 - El **laboratorio de distancia** del Módulo 3 es un **modelo ilustrativo**
   (`p_L ≈ A·(p/p_th)^((d+1)/2)`, `p_th = 10%`), no un decodificador; así lo dice
   la propia página, que enlaza a la lección 06, donde sí corre el decodificador

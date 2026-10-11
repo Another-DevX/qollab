@@ -16,6 +16,7 @@
   var Shor = window.createShor ? window.createShor(Q) : null;
   var Noise = (window.createNoise && Shor) ? window.createNoise(Q, Shor) : null;
   var Quiz = window.Quiz;
+  var CircuitRun = window.CircuitRun;
 
   // Debug helper (enable with: window.QC_DEBUG = true)
   function dbg() {
@@ -125,6 +126,30 @@
     return bits ? "<span class='m'>s = (" + bits[0] + ", " + bits[1] + ")</span>" : "<span class='coef'>—</span>";
   }
 
+  /* ------------------------------------------------------------------
+   * Decoding helpers for real backend runs (counts -> syndrome).
+   * Qiskit prints the highest classical-bit index on the left, so the
+   * strings are reversed to line the bits up with measurement order.
+   * ------------------------------------------------------------------ */
+  function dominantKey(counts) {
+    var best = null, bestN = -1;
+    Object.keys(counts || {}).forEach(function (k) {
+      if (counts[k] > bestN) { bestN = counts[k]; best = k; }
+    });
+    return best;
+  }
+  function bitsInOrder(key) {
+    return key ? key.split("").reverse().map(Number) : [];
+  }
+  /* Bit-flip repetition code: bits = [q0,q1,q2,a0,a1]; (a0,a1) locates the error. */
+  var REPETITION_DIAGNOSIS = { "10": 0, "11": 1, "01": 2, "00": null };
+  function repetitionSyndrome(counts) {
+    var bits = bitsInOrder(dominantKey(counts));
+    if (bits.length < 5) return null;
+    var a0 = bits[3], a1 = bits[4];
+    return { a0: a0, a1: a1, qubit: REPETITION_DIAGNOSIS["" + a0 + a1] };
+  }
+
   /* ==================================================================
    * 3. Bloch sphere (Canvas 2D)
    * ================================================================== */
@@ -221,6 +246,7 @@
         "<section class='grid-two' style='margin-top:36px'>" +
           "<div class='sticky-col'>" +
             "<div id='visual-encoded'><div class='panel'><div id='circuit'></div></div><div class='quiet' style='margin-top:16px'><div class='caption' id='state-cap'>Input and ancillas</div><div class='state-eq' id='state-eq'></div></div></div>" +
+            "<div id='circuit-run' style='margin-top:16px'></div>" +
           "</div>" +
           "<div class='stack'><div class='panel' id='stage-a'></div><div id='stage-b'></div><div id='stage-c'></div><div id='discovery'></div></div>" +
         "</section>" +
@@ -299,7 +325,34 @@
         "<p class='dek' style='margin-top:20px'>We haven't copied the qubit. We've encoded one logical qubit into an entangled three-qubit state.</p>" +
         "<details class='expand' style='margin-top:16px'><summary>Why isn't this quantum cloning?</summary><div class='body'>The no-cloning theorem forbids making independent copies of an unknown state. The encoder is a single <em>unitary</em> acting on the original qubit and two ancillas prepared in |0⟩ — two CNOT gates. It produces one entangled state whose amplitudes still carry <i>α</i> and <i>β</i>; it never creates three separate qubits each holding <i>α</i> and <i>β</i>.</div></details>";
     }
-    updateSingle(); updateStageB(); updateMath();
+    /* Run the real repetition-code circuit on a backend and decode its
+     * syndrome into the same qubit mapping the classical simulation uses. */
+    function mountRepetitionRun() {
+      CircuitRun.mount($sel("#circuit-run", root), {
+        model: "repetition",
+        label: "Run on the backend",
+        options: function () {
+          return exp.errorQubit != null ? { errorQubit: exp.errorQubit, errorPauli: "X" } : {};
+        },
+        onResult: function (result, out) {
+          var syn = repetitionSyndrome(result.counts);
+          if (!syn) return;
+          var line = "<div class='cmp-row' style='margin-top:10px'><span class='caption'>Dominant syndrome (a₀, a₁)</span>" +
+            "<span class='m'>(" + syn.a0 + ", " + syn.a1 + ")</span></div>";
+          if (syn.qubit != null) {
+            var expected = exp.errorQubit;
+            var agrees = expected != null && expected === syn.qubit;
+            line += "<p class='caption' style='margin-top:6px'>The two checks point at qubit " + (syn.qubit + 1) +
+              (expected != null ? (agrees ? " — the qubit you flipped." : " (your error was on qubit " + (expected + 1) + ").") : ".") + "</p>";
+          } else {
+            line += "<p class='caption' style='margin-top:6px'>No check fired: the encoded logical state was measured unchanged.</p>";
+          }
+          out.insertAdjacentHTML("beforeend", line);
+        },
+      });
+    }
+
+    updateSingle(); updateStageB(); updateMath(); mountRepetitionRun();
     return null;
   }
 
@@ -896,6 +949,7 @@
         "</section>" +
         "<section id='sb-math' style='margin-top:48px'></section>" +
         "<section id='sb-challenge' style='margin-top:48px'></section>" +
+        "<section id='sb-run' style='margin-top:48px'></section>" +
         "<aside class='transition'><div class='big'>05</div><div><span class='eyebrow' style='color:var(--faint)'>Next</span>" +
           "<p class='q'>We built the code. How do we know when an error occurs?</p>" +
           "<p class='teaser'>Eight stabilizer measurements reveal where errors occurred — without reading the logical information.</p>" +
@@ -1042,7 +1096,50 @@
       $sel("#gz-reset", root).addEventListener("click", function () { gz.step = 0; gz.minus = false; updateGhz(); });
     }
 
-    updateGhz(); update(); updateChallenge();
+    /* Run the nine-qubit Shor encoding on a backend and read its syndrome. */
+    function mountShorRun() {
+      var sbr = { error: "none" };
+      var host = $sel("#sb-run", root);
+      host.innerHTML =
+        "<div class='page-head'><div class='meta'><span class='kick'>On hardware · run the encoding</span></div>" +
+          "<h2 class='headline' style='font-size:1.6rem'>Run the Shor circuit</h2>" +
+          "<p class='dek' style='margin-top:8px'>Execute the exact nine-qubit encoding on a backend and read its eight stabilizers. With no error, no check should fire.</p></div>" +
+        "<div class='panel' style='margin-top:16px'>" +
+          "<div class='caption'>Inject a single-qubit error (optional)</div>" +
+          "<div class='chip-row' style='margin-top:8px' id='sbr-err'>" +
+            [["none", "none"], ["X", "X on q₁"], ["Z", "Z on q₁"]].map(function (e) {
+              return "<button class='chip" + (sbr.error === e[0] ? " active" : "") + "' data-sbr='" + e[0] + "'>" + e[1] + "</button>";
+            }).join("") +
+          "</div></div>" +
+        "<div id='sbr-card' style='margin-top:16px'></div>";
+      function paint() {
+        $all("#sbr-err [data-sbr]", root).forEach(function (el) {
+          el.classList.toggle("active", el.getAttribute("data-sbr") === sbr.error);
+        });
+      }
+      $all("#sbr-err [data-sbr]", root).forEach(function (el) {
+        el.addEventListener("click", function () { sbr.error = el.getAttribute("data-sbr"); paint(); });
+      });
+      CircuitRun.mount($sel("#sbr-card", root), {
+        model: "shor",
+        label: "Run the Shor circuit",
+        options: function () {
+          return sbr.error === "none" ? {} : { errorQubit: 0, errorPauli: sbr.error };
+        },
+        onResult: function (result, out) {
+          var bits = bitsInOrder(dominantKey(result.counts));
+          if (!bits.length) return;
+          out.insertAdjacentHTML("beforeend",
+            "<div class='cmp-row' style='margin-top:10px'><span class='caption'>Dominant syndrome s</span>" +
+            "<span class='m'>(" + bits.join(", ") + ")</span></div>" +
+            "<p class='caption' style='margin-top:6px'>" + (bits.join("") === "00000000"
+              ? "No stabilizer fired: the encoded state is a +1 eigenstate of all eight checks."
+              : "Lit stabilizers mark where the error was caught.") + "</p>");
+        },
+      });
+    }
+
+    updateGhz(); update(); updateChallenge(); mountShorRun();
     return null;
   }
 
