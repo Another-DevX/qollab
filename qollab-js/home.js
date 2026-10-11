@@ -10,34 +10,10 @@
   "use strict";
 
   var MODULES = [
-    {
-      n: "01",
-      href: "#/module-1",
-      title: "Understanding Quantum Errors",
-      desc: "Pauli operators and the Bloch sphere.",
-      status: "ready",
-    },
-    {
-      n: "02",
-      href: "#/module-2",
-      title: "From Repetition to Shor Code",
-      desc: "Encoding, syndromes, and recovery.",
-      status: "ready",
-    },
-    {
-      n: "03",
-      href: "#/module-3",
-      title: "Surface Code",
-      desc: "Protecting quantum information on a lattice.",
-      status: "ready",
-    },
-    {
-      n: "04",
-      href: "#/module-4",
-      title: "Iceberg Code",
-      desc: "Error detection and postselection.",
-      status: "ready",
-    },
+    { n: "01", key: "errors", href: "#/module-1", title: "Understanding Quantum Errors", desc: "Pauli operators and the Bloch sphere.", status: "ready" },
+    { n: "02", key: "shor", href: "#/module-2", title: "From Repetition to Shor Code", desc: "Encoding, syndromes, and recovery.", status: "ready" },
+    { n: "03", key: "iceberg", href: "#/module-4", title: "Iceberg Code", desc: "Error detection and postselection.", status: "ready" },
+    { n: "04", key: "surface", href: "#/module-3", title: "Surface Code", desc: "Protecting quantum information on a lattice.", status: "ready" },
   ];
 
   /* ------------------------------------------------------------------ figures */
@@ -133,7 +109,7 @@
     );
   }
 
-  var FIGS = { "01": blochMini, "02": shorMini, "03": latticeMini, "04": icebergMini };
+  var FIGS = { errors: blochMini, shor: shorMini, iceberg: icebergMini, surface: latticeMini };
 
   /* -------------------------------------------------------------------- cards */
 
@@ -141,7 +117,7 @@
     return "<li>" +
       "<a class='modcard' href='" + mod.href + "' aria-label='Explore Module " + mod.n + ": " + mod.title + "'>" +
         "<span class='modcard-head'><span class='modcard-label'>Module</span><span class='modcard-num'>" + mod.n + "</span></span>" +
-        "<span class='modcard-fig'>" + (FIGS[mod.n] ? FIGS[mod.n]() : "") + "</span>" +
+        "<span class='modcard-fig'>" + (FIGS[mod.key] ? FIGS[mod.key]() : "") + "</span>" +
         "<span class='modcard-title'>" + mod.title + "</span>" +
         "<span class='modcard-desc'>" + mod.desc + "</span>" +
         "<span class='modcard-action'>Explore Module <span aria-hidden class='modcard-arrow'>&rarr;</span></span>" +

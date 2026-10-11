@@ -17,8 +17,8 @@
   [
     ["Module1", "Understanding quantum errors", "Module 1"],
     ["Module2", "From Repetition to Shor Code", "Module 2"],
-    ["Module3", "The Surface Code", "Module 3"],
-    ["Module4", "Iceberg Code · [[4,2,2]]", "Module 4"],
+    ["Module3", "The Surface Code", "Module 4"],
+    ["Module4", "Iceberg Code · [[4,2,2]]", "Module 3"],
     ["ErrorsLab", "Systematic gate errors · one qubit", "Lab"],
   ].forEach(function (def) {
     var mod = global[def[0]];

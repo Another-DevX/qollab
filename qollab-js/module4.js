@@ -115,7 +115,7 @@
         UI.backLink("#/", "All modules") +
         "<div class='cover'>" +
           "<div>" +
-            "<div style='display:flex;align-items:center;gap:12px'><span style='height:1px;width:40px;background:var(--accent)'></span><span class='eyebrow'>Module 4 — Quantum Error Correction</span></div>" +
+            "<div style='display:flex;align-items:center;gap:12px'><span style='height:1px;width:40px;background:var(--accent)'></span><span class='eyebrow'>Module 3 — Quantum Error Correction</span></div>" +
             "<h1 class='headline' style='margin-top:24px'>Iceberg Code</h1>" +
             "<p class='sub'>Detecting Errors Without Correcting Them</p>" +
             "<p class='dek' style='margin-top:16px'>What if a quantum code can detect errors but cannot tell us how to correct them? Explore how four physical qubits can protect two logical qubits through error detection and postselection.</p>" +
@@ -662,7 +662,7 @@
             "<div class='a'><a href='" + q.href + "'>" + q.lesson + " →</a></div></div>";
         }).join("");
         box.innerHTML =
-          "<div class='page-head'><div class='meta'><span class='kick'>Final knowledge check</span></div><h2 class='headline' style='font-size:1.6rem'>Module 4 Complete</h2></div>" +
+          "<div class='page-head'><div class='meta'><span class='kick'>Final knowledge check</span></div><h2 class='headline' style='font-size:1.6rem'>Module 3 Complete</h2></div>" +
           "<div class='panel' style='margin-top:16px'>" +
             "<div class='cmp-row'><span class='caption'>Score</span><span class='m'>" + sc + " / " + total + "</span></div>" +
             "<div class='cmp-row'><span class='caption'>Percentage</span><span class='m'>" + pct + "%</span></div>" +
