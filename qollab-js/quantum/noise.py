@@ -107,6 +107,15 @@ def _noise_model(channel, p, deps):
     return nm
 
 
+def _backend_has_noise(backend):
+    """True when the injected backend already carries a device noise model."""
+    try:
+        name = str(getattr(backend, "name", "") or "").lower()
+    except Exception:  # noqa: BLE001
+        name = ""
+    return any(k in name for k in ("ibm", "ionq", "fake", "noise"))
+
+
 def run(backend, params_json="{}"):
     try:
         opts = json.loads(params_json or "{}")
@@ -133,8 +142,28 @@ def run(backend, params_json="{}"):
     AerSimulator = deps[0]
     qc = spec["module"].build(error_qubit, error_pauli)
 
-    ideal = run_circuit(AerSimulator(), qc, shots)
-    noisy = run_circuit(AerSimulator(noise_model=_noise_model(channel, p, deps)), qc, shots)
+    # Run a real circuit on the Qollab backend in every case. On an ideal backend
+    # (built-in / AWS Braket) we add our own noise channel with Aer; on a
+    # noise-model backend we use the backend's own job and show a noiseless Aer
+    # reference next to it.
+    try:
+        backend_name = str(getattr(backend, "name", "") or "")
+    except Exception:  # noqa: BLE001
+        backend_name = ""
+
+    if backend is not None and _backend_has_noise(backend):
+        noisy = run_circuit(backend, qc, shots)
+        ideal = run_circuit(AerSimulator(), qc, shots)
+        mode = "backend"
+    elif backend is not None:
+        ideal = run_circuit(backend, qc, shots)
+        noisy = run_circuit(AerSimulator(noise_model=_noise_model(channel, p, deps)), qc, shots)
+        mode = "injected"
+    else:  # no backend (local tests): Aer for both
+        ideal = run_circuit(AerSimulator(), qc, shots)
+        noisy = run_circuit(AerSimulator(noise_model=_noise_model(channel, p, deps)), qc, shots)
+        mode = "local"
+
     ideal = {str(k): int(v) for k, v in ideal.items()}
     noisy = {str(k): int(v) for k, v in noisy.items()}
 
@@ -145,6 +174,8 @@ def run(backend, params_json="{}"):
         "protected": spec["protected"],
         "channel": channel,
         "p": p,
+        "mode": mode,
+        "backend": backend_name,
         "qubits": spec["module"].QUBITS,
         "shots": shots,
         "ideal": {"counts": ideal, "detected": probability(ideal, detect)},

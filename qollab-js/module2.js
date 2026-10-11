@@ -1498,34 +1498,25 @@
       }
       btn.disabled = true;
       out.innerHTML = "<p class='caption'>Submitting…</p>";
-      var job;
-      if (CircuitRun.backendHasNoise && CircuitRun.backendHasNoise()) {
-        job = CircuitRun.run("shor", { shots: 2048 }).then(function (res) {
-          out.innerHTML =
-            "<div class='cmp-row' style='margin-top:12px'><span class='caption'>Protected</span><span class='m'>Shor code [[9,1,3]]</span></div>" +
-            "<div class='caption' style='margin-top:8px'>Backend noise model (" + (CircuitRun.backendName() || "device") + ") · detected " + Math.round(100 * ((res.summary && res.summary.detected) || 0)) + "%</div>" +
-            CircuitRun.barsHTML(res.counts, 4) +
-            "<p class='caption' style='margin-top:8px'>This backend already applies a real device noise model, so no noise is injected.</p>";
-        });
-      } else {
-        job = CircuitRun.runNoisy({ model: "shor", channel: nl.model, p: nl.p, shots: 2048 }).then(function (res) {
-          var raw = Noise.exactPL(Noise.CODES.shor, res.channel, res.p, false);
-          var fixed = Noise.exactPL(Noise.CODES.shor, res.channel, res.p, true);
-          out.innerHTML =
-            "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> " + res.protected + "</p></div>" +
-            "<div class='grid-two' style='margin-top:12px'>" +
-              "<div><div class='caption'>Noise-free circuit · detected " + Math.round(100 * res.ideal.detected) + "%</div>" + CircuitRun.barsHTML(res.ideal.counts, 4) + "</div>" +
-              "<div><div class='caption'>Noisy circuit (Aer) · detected " + Math.round(100 * res.noisy.detected) + "%</div>" + CircuitRun.barsHTML(res.noisy.counts, 4) + "</div>" +
-            "</div>" +
-            "<div class='cmp-row' style='margin-top:12px'><span class='caption'>Logical failure · no correction</span><span class='m'>" + (raw * 100).toFixed(2) + "%</span></div>" +
-            "<div class='cmp-row'><span class='caption'>Logical failure · corrected</span><span class='m'>" + (fixed * 100).toFixed(2) + "%</span></div>" +
-            (res.citations && res.citations.length
-              ? "<details class='expand' style='margin-top:12px'><summary>Noise models &amp; references</summary><div>" + res.citations.map(function (c) { return "<div class='caption' style='margin-top:4px'>" + c + "</div>"; }).join("") + "</div></details>"
-              : "");
-        });
-      }
-      job.catch(function (err) { out.innerHTML = "<div class='notice'><p>" + ((err && err.message) || err) + "</p></div>"; })
-        .then(function () { btn.disabled = false; });
+      CircuitRun.runNoisy({ model: "shor", channel: nl.model, p: nl.p, shots: 2048 }).then(function (res) {
+        var raw = Noise.exactPL(Noise.CODES.shor, res.channel, res.p, false);
+        var fixed = Noise.exactPL(Noise.CODES.shor, res.channel, res.p, true);
+        out.innerHTML =
+          "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> " + res.protected + "</p></div>" +
+          "<p class='caption' style='margin-top:8px'>Ran on the Qollab backend" + (res.backend ? " (" + res.backend + ")" : "") + " · " +
+            (res.mode === "backend" ? "device noise model" : "ideal circuit, noise injected with Aer") + ".</p>" +
+          "<div class='grid-two' style='margin-top:12px'>" +
+            "<div><div class='caption'>" + (res.mode === "backend" ? "Noise-free reference (Aer)" : "Noise-free circuit (Qollab)") + " · detected " + Math.round(100 * res.ideal.detected) + "%</div>" + CircuitRun.barsHTML(res.ideal.counts, 4) + "</div>" +
+            "<div><div class='caption'>" + (res.mode === "backend" ? "Noisy circuit (device)" : "Noisy circuit (injected)") + " · detected " + Math.round(100 * res.noisy.detected) + "%</div>" + CircuitRun.barsHTML(res.noisy.counts, 4) + "</div>" +
+          "</div>" +
+          "<div class='cmp-row' style='margin-top:12px'><span class='caption'>Logical failure · no correction</span><span class='m'>" + (raw * 100).toFixed(2) + "%</span></div>" +
+          "<div class='cmp-row'><span class='caption'>Logical failure · corrected</span><span class='m'>" + (fixed * 100).toFixed(2) + "%</span></div>" +
+          (res.citations && res.citations.length
+            ? "<details class='expand' style='margin-top:12px'><summary>Noise models &amp; references</summary><div>" + res.citations.map(function (c) { return "<div class='caption' style='margin-top:4px'>" + c + "</div>"; }).join("") + "</div></details>"
+            : "");
+      }).catch(function (err) {
+        out.innerHTML = "<div class='notice'><p>" + ((err && err.message) || err) + "</p></div>";
+      }).then(function () { btn.disabled = false; });
     }
 
     update(); updateQuiz();

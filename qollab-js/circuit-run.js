@@ -234,33 +234,16 @@
     btn.addEventListener("click", function () {
       btn.disabled = true;
       out.innerHTML = "";
-      if (backendHasNoise()) {
-        // The backend already carries a real device noise model: use it as is.
-        status.textContent = "Running on the backend's noise model…";
-        run(model, { shots: opts.shots || 2048 }).then(function (res) {
-          status.textContent = res.shots + " shots · " + (backendName() || "backend") + " (device noise model)";
-          out.innerHTML =
-            "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> " + esc(PROTECTED[model] || model) + "</p></div>" +
-            "<div class='caption' style='margin-top:12px'>Backend noise model · detected " + pct(res.summary && res.summary.detected) + "</div>" +
-            barsHTML(res.counts, 4) +
-            (res.summary && res.summary.note ? "<p class='caption' style='margin-top:6px'>" + esc(res.summary.note) + "</p>" : "");
-        }).catch(function (err) {
-          status.textContent = "";
-          out.innerHTML = "<div class='notice'><p>" + esc((err && err.message) || err) + "</p></div>";
-        }).then(function () {
-          btn.disabled = !available();
-        });
-        return;
-      }
-      // Ideal backend: inject our own noise channel with Aer.
-      status.textContent = "Building the noisy circuit…";
+      status.textContent = "Running on the Qollab backend…";
       runNoisy({ model: model, channel: state.channel, p: state.p, shots: opts.shots || 2048 }).then(function (res) {
-        status.textContent = res.shots + " shots · " + res.channel + " @ p = " + res.p;
+        status.textContent = res.shots + " shots · " + res.channel + " @ p = " + res.p + (res.backend ? " · " + res.backend : "");
         out.innerHTML =
           "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> " + esc(res.protected) + "</p></div>" +
+          "<p class='caption' style='margin-top:8px'>Ran on the Qollab backend" + (res.backend ? " (" + esc(res.backend) + ")" : "") + " · " +
+            (res.mode === "backend" ? "device noise model" : "ideal circuit, noise injected with Aer") + ".</p>" +
           "<div class='grid-two' style='margin-top:12px'>" +
-            "<div><div class='caption'>Noise-free circuit · detected " + pct(res.ideal.detected) + "</div>" + barsHTML(res.ideal.counts, 4) + "</div>" +
-            "<div><div class='caption'>Noisy circuit · detected " + pct(res.noisy.detected) + "</div>" + barsHTML(res.noisy.counts, 4) + "</div>" +
+            "<div><div class='caption'>" + (res.mode === "backend" ? "Noise-free reference (Aer)" : "Noise-free circuit (Qollab)") + " · detected " + pct(res.ideal.detected) + "</div>" + barsHTML(res.ideal.counts, 4) + "</div>" +
+            "<div><div class='caption'>" + (res.mode === "backend" ? "Noisy circuit (device)" : "Noisy circuit (injected)") + " · detected " + pct(res.noisy.detected) + "</div>" + barsHTML(res.noisy.counts, 4) + "</div>" +
           "</div>" +
           (res.citations && res.citations.length
             ? "<details class='expand' style='margin-top:12px'><summary>Noise models &amp; references</summary><div>" +
