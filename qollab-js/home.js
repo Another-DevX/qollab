@@ -36,14 +36,6 @@
       desc: "Explore how four physical qubits detect quantum errors, why some errors cannot be corrected, and how postselection can help.",
       status: "ready",
     },
-    {
-      n: "L",
-      label: "Lab",
-      href: "#/lab/systematic-errors",
-      title: "Systematic Gate Errors",
-      desc: "A PhET-style sandbox: how a coherent, systematic error in a one-qubit gate bends the Bloch vector and compounds on repetition.",
-      status: "ready",
-    },
     /* Future modules — not displayed until implemented:
      * { n: "05", href: "#/module-5", title: "…",
      *   desc: "…", status: "soon" },
@@ -51,10 +43,9 @@
   ];
 
   function card(mod) {
-    var label = mod.label || ("Module " + mod.n);
     return "<li>" +
-      "<a class='modcard' href='" + mod.href + "' aria-label='Explore " + label + ": " + mod.title + "'>" +
-        "<span class='modcard-label'>" + label + "</span>" +
+      "<a class='modcard' href='" + mod.href + "' aria-label='Explore Module " + mod.n + ": " + mod.title + "'>" +
+        "<span class='modcard-label'>Module " + mod.n + "</span>" +
         "<span class='modcard-title'>" + mod.title + "</span>" +
         "<span class='modcard-desc'>" + mod.desc + "</span>" +
         "<span class='modcard-action'>Explore Module <span aria-hidden class='modcard-arrow'>→</span></span>" +
