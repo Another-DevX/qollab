@@ -45,5 +45,5 @@
   }
 
   if (typeof module !== "undefined" && module.exports) module.exports = createQuiz;
-  else global.createQuiz = createQuiz;
+  global.createQuiz = createQuiz;
 })(typeof window !== "undefined" ? window : globalThis);

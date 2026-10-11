@@ -22,9 +22,10 @@
  *   => d^2 - 1 stabilizers, half X and half Z.
  */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else root.Surface = factory();
-})(typeof self !== 'undefined' ? self : this, function () {
+  var Surface = factory();
+  if (typeof module === 'object' && module.exports) module.exports = Surface;
+  root.Surface = Surface;
+})(typeof self !== 'undefined' ? self : globalThis, function () {
   'use strict';
 
   var DISTANCES = [3, 5, 7];

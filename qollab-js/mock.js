@@ -11,9 +11,10 @@
  * decoder.js (lesson 06).
  */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else root.Mock = factory();
-})(typeof self !== 'undefined' ? self : this, function () {
+  var Mock = factory();
+  if (typeof module === 'object' && module.exports) module.exports = Mock;
+  root.Mock = Mock;
+})(typeof self !== 'undefined' ? self : globalThis, function () {
   'use strict';
 
   var P_TH = 0.10;

@@ -209,5 +209,5 @@
   }
 
   if (typeof module !== "undefined" && module.exports) module.exports = createShor;
-  else global.createShor = createShor;
+  global.createShor = createShor;
 })(typeof window !== "undefined" ? window : globalThis);
