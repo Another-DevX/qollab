@@ -25,13 +25,20 @@
     color-scheme:dark;
   }
   *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
+  html{scroll-behavior:smooth; background-color:var(--surface)}
   body{
     margin:0; min-height:100vh; display:flex; flex-direction:column;
     background-color:var(--surface); color:var(--ink);
     font-family:var(--sans); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-    background-image:radial-gradient(90rem 44rem at 50% -20%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 60%);
-    background-attachment:fixed;
+    /* One continuous scientific-paper grid behind the whole app (same as the Home page). */
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--line) 40%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--line) 40%, transparent) 1px, transparent 1px),
+      radial-gradient(90rem 44rem at 50% -20%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 60%);
+    background-size:32px 32px, 32px 32px, auto;
+    background-position:-1px -1px, -1px -1px, 50% -20%;
+    background-repeat:repeat, repeat, no-repeat;
+    background-attachment:scroll, scroll, fixed;
   }
   ::selection{background:color-mix(in srgb, var(--accent) 26%, transparent)}
   a{color:inherit}
@@ -290,11 +297,6 @@
     padding-top:clamp(14px,2.2vh,30px);
     padding-bottom:clamp(24px,4vh,52px);
     padding-inline:clamp(20px,3vw,48px);
-    background-image:
-      linear-gradient(to right, color-mix(in srgb, var(--line) 40%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in srgb, var(--line) 40%, transparent) 1px, transparent 1px);
-    background-size:32px 32px;
-    background-position:-1px -1px;
   }
   .home-split{display:grid; grid-template-columns:1fr; gap:clamp(22px,3.4vh,44px); align-items:center}
   @media (min-width:980px){
