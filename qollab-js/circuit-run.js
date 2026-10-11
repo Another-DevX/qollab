@@ -17,27 +17,23 @@
 (function (global) {
   "use strict";
 
-  var modulePromise = null;
+  var runner = null;
 
   /* The Qollab runtime injects a `backend` into every JS file of the project. */
   function available() {
     try { return typeof backend !== "undefined" && !!backend; } catch (e) { return false; }
   }
 
-  /* Resolve the runner: reuse window.QollabCircuits if another file loaded it,
-   * otherwise import circuits.js lazily. */
+  /* The runner is exposed by circuits.js, which main.js imports statically so
+   * Qollab's bundler ships it. No dynamic import here: `import()` resolved to
+   * /_nuxt/circuits.js and 404'd because the file was never bundled. */
   function load() {
+    if (runner) return Promise.resolve(runner);
     if (global.QollabCircuits && global.QollabCircuits.runModel) {
-      return Promise.resolve(global.QollabCircuits);
+      runner = global.QollabCircuits;
+      return Promise.resolve(runner);
     }
-    if (!modulePromise) {
-      modulePromise = import("./circuits.js").then(function (mod) {
-        if (mod && mod.runModel) return mod;
-        if (global.QollabCircuits) return global.QollabCircuits;
-        throw new Error("Could not load the circuit runner.");
-      });
-    }
-    return modulePromise;
+    return Promise.reject(new Error("The circuit runner (circuits.js) is not loaded."));
   }
 
   function run(modelId, options) {

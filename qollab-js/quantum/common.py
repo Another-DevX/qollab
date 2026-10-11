@@ -4,6 +4,8 @@ Kept deliberately tiny: submit one job, turn the result into a plain dict, and
 package a uniform response. No Qiskit UI, no printing, no global state.
 """
 
+import json
+
 DEFAULT_SHOTS = 1024
 
 
@@ -18,17 +20,23 @@ def run_circuit(backend, circuit, shots=DEFAULT_SHOTS):
 
 
 def response(model, title, qubits, shots, counts, summary=None):
-    """Package the uniform response dict every model returns."""
+    """Package the uniform response as a JSON **string**.
+
+    The JavaScript side calls ``run`` through Qollab's ``.callPromising`` and
+    reads ``.toString()``. Returning JSON text here avoids depending on how
+    Pyodide converts a Python ``dict`` (dict -> Map), so the bridge is just
+    ``JSON.parse`` — the same contract the working Qollab projects use.
+    """
     out = {
         "model": model,
         "title": title,
         "qubits": int(qubits),
         "shots": int(shots),
-        "counts": counts,
+        "counts": {str(k): int(v) for k, v in dict(counts).items()},
     }
     if summary is not None:
         out["summary"] = summary
-    return out
+    return json.dumps(out, ensure_ascii=False, separators=(",", ":"))
 
 
 def bits_of(key):

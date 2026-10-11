@@ -4,14 +4,14 @@
  * Thin bridge between the interface and the Python files in `quantum/`. Each
  * model is one Python module exposing
  *
- *     run(backend, shots, error_qubit, error_pauli) -> dict
+ *     run(backend, shots, error_qubit, error_pauli) -> json string
  *
- * Qollab hands that function to JavaScript through `.callPromising`, and
- * `.toJs()` turns the returned Python dict into a plain object.
+ * Qollab hands that function to JavaScript through `.callPromising`, and the
+ * returned value is read with `.toString()` (a JSON string) and parsed here.
+ * Returning JSON text avoids depending on how Pyodide converts a Python dict.
  *
- * NOTE: nothing imports this file yet, so it stays inert until you decide where
- * to call it from. `backend` is the pre-created backend Qollab injects into the
- * entry point and every JS file it imports (see the runtime docs).
+ * `backend` is the pre-created backend Qollab injects into the entry point and
+ * every JS file it imports (see the runtime docs).
  */
 import * as bell from 'quantum.bell';
 import * as repetition from 'quantum.repetition';
@@ -51,9 +51,15 @@ export async function runModel(id, { shots = 1024, errorQubit = null, errorPauli
   if (typeof backend === 'undefined') {
     throw new Error('No backend available: run this project inside Qollab.');
   }
-  const result = await model.module.run.callPromising(backend, shots, errorQubit, errorPauli);
-  return result.toJs();
+  const proxy = await model.module.run.callPromising(backend, shots, errorQubit, errorPauli);
+  let text;
+  try {
+    text = typeof proxy === 'string' ? proxy : proxy.toString();
+  } finally {
+    if (proxy && typeof proxy.destroy === 'function') proxy.destroy();
+  }
+  return JSON.parse(text);
 }
 
-/* Exposed for a future UI page; harmless while nothing imports this module. */
+/* Exposed so the shared UI card (circuit-run.js) can call it. */
 window.QollabCircuits = { MODELS, getModel, runModel };

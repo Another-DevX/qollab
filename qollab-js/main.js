@@ -13,7 +13,8 @@
 import './bloch.js';
 import './m1math.js';
 import './ui.js';
-import './circuit-run.js'; // shared "run on the backend" card (bridges to circuits.js)
+import './circuit-run.js'; // shared "run on the backend" card (UI only)
+import './circuits.js';    // Python <-> JS circuit runner (must be a static import)
 
 /* --- Module 2 · From Repetition to Shor Code ------------------------------ */
 import './quantum.js';

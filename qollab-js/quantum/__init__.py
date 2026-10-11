@@ -7,9 +7,9 @@ One Python file per code. Each module exposes the same entry point::
 so the JavaScript side can call any of them the same way::
 
     import * as repetition from 'quantum.repetition';
-    const out = (await repetition.run.callPromising(backend, 1000)).toJs();
+    const out = JSON.parse((await repetition.run.callPromising(backend, 1000)).toString());
 
-Every ``run`` returns a plain, JSON-serialisable dict with the shape::
+Every ``run`` returns a JSON **string** with the shape::
 
     {
       "model":   "repetition",
@@ -19,6 +19,9 @@ Every ``run`` returns a plain, JSON-serialisable dict with the shape::
       "counts":  {"11011": 998, ...},   # raw measurement, one char per classical bit
       "summary": { ... }                # model-specific interpretation
     }
+
+Returning JSON text (instead of a Python ``dict``) avoids depending on how
+Pyodide converts a dict, so the JS bridge is just ``JSON.parse``.
 
 Nothing here talks to the browser: these functions only build a circuit, submit
 one job through the ``backend`` they are given, and return numbers. Physically

@@ -50,7 +50,8 @@ def main():
         if only and mid not in only:
             continue
         try:
-            out = mod.run(backend, shots=args.shots, **opts)
+            raw = mod.run(backend, shots=args.shots, **opts)
+            out = json.loads(raw) if isinstance(raw, str) else raw
         except Exception as exc:  # noqa: BLE001
             failed += 1
             print(f"\n== {mid}: FAILED -> {type(exc).__name__}: {exc}")
