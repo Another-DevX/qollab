@@ -1,3 +1,5 @@
+**This effort is supported by Qollab & IonQ**
+
 <p align="center">
   <img src="docs/assets/logo.png" width="190" alt="QEClassroom — Interactive QEC">
 </p>
@@ -198,7 +200,11 @@ These are directions, not shipped features.
 
 ## Team & Acknowledgments
 
-**Team.** _Placeholder — add contributors' names, roles, and GitHub handles here._
+**Team.**
+- Alejandro Agudelo González
+- Manuela Gómez Colorado
+- José Luis Manco Velázquez
+- Violeta Soto Martínez
 
 **Hackathon.** Built for the **Qollab × IonQ Hackathon — Quantum Unlocked**.
 
