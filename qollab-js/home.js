@@ -158,7 +158,7 @@
         "<div class='home-split'>" +
           "<section class='home-cover' aria-label='Introduction'>" +
             "<p class='eyebrow'>Interactive quantum learning</p>" +
-            "<h1 class='headline home-title'>Quantum<br>Error Correction</h1>" +
+            "<h1 class='headline home-title'>Quantum<br>Error Correction and Detection</h1>" +
             "<p class='home-sub'>Explore quantum errors, build codes, and learn how quantum information survives noise.</p>" +
             "<figure class='home-figure'>" + heroBloch() +
               "<figcaption class='home-figure-cap'><span class='m'>|&psi;&rang; = &alpha;|0&rang; + &beta;|1&rang;</span></figcaption>" +
