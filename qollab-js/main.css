@@ -304,7 +304,7 @@
     background-position:-1px -1px;
   }
   .home-split{display:grid; grid-template-columns:1fr; gap:clamp(22px,3.4vh,44px); align-items:center}
-  @media (min-width:900px){
+  @media (min-width:980px){
     .home-split{grid-template-columns:minmax(0,43fr) minmax(0,57fr); gap:clamp(28px,4.2vw,64px)}
   }
 
@@ -361,7 +361,7 @@
   .mini-label{fill:var(--faint); font-family:var(--mono); font-style:normal; font-size:7px}
 
   /* Desktop: keep the cover and the four cards inside one viewport where it fits. */
-  @media (min-width:900px) and (min-height:701px){
+  @media (min-width:980px) and (min-height:701px){
     .home{min-height:calc(100dvh - 64px - 74px); display:flex; flex-direction:column; justify-content:center}
   }
 
