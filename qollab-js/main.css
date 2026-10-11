@@ -358,6 +358,35 @@
     .home{min-height:calc(100dvh - 64px - 74px); display:flex; flex-direction:column; justify-content:center}
   }
 
+  /* ---------- Module covers (40/60 editorial layout) ---------- */
+  .cover-page{padding-top:clamp(16px,2.4vh,32px); padding-bottom:clamp(24px,4vh,56px)}
+  .module-cover{display:grid; grid-template-columns:1fr; gap:clamp(26px,3.6vh,44px); align-items:center}
+  @media (min-width:900px){ .module-cover{grid-template-columns:minmax(0,40fr) minmax(0,60fr); gap:clamp(36px,5vw,80px)} }
+  .cover-intro{max-width:34rem}
+  .cover-title{font-size:clamp(1.9rem,3.3vw,3.4rem); line-height:1.06; margin-top:clamp(10px,1.6vh,18px); letter-spacing:-.015em}
+  .cover-sub{margin-top:clamp(8px,1.2vh,12px); font-size:clamp(1.02rem,1.3vw,1.15rem); line-height:1.5; color:var(--muted)}
+  .cover-dek{margin-top:clamp(8px,1.2vh,12px); max-width:52ch}
+  .cover-cta{display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin-top:clamp(14px,2.2vh,22px)}
+  .cover-figure{margin:clamp(14px,2.4vh,26px) 0 0; display:flex; justify-content:center}
+  .cover-figure .bloch-wrap{height:clamp(180px,26vh,260px); width:100%; max-width:420px}
+  .cover-hero{width:100%; max-width:420px; margin:0 auto}
+  .cover-figure-panel{width:100%; max-width:400px; margin:0 auto}
+  .cover-svg{width:100%; max-width:430px; height:auto; display:block}
+
+  .cover-route{min-width:0}
+  .route-head{display:flex; align-items:center; gap:16px}
+  .route-list{list-style:none; margin:clamp(12px,1.8vh,20px) 0 0; padding:0}
+  .route-item{display:flex; align-items:baseline; gap:clamp(14px,2vw,26px); padding:clamp(11px,1.6vh,17px) 0; border-top:1px solid var(--line); text-decoration:none; color:inherit; transition:border-color .15s ease}
+  .route-list li:last-child .route-item{border-bottom:1px solid var(--line)}
+  .route-num{flex:0 0 auto; min-width:2.1ch; font-family:var(--serif); font-size:clamp(1.3rem,2vw,1.85rem); line-height:1; color:color-mix(in srgb, var(--accent) 68%, var(--faint))}
+  .route-body{display:flex; flex-direction:column; gap:3px; flex:1; min-width:0}
+  .route-title{font-family:var(--serif); font-weight:600; font-size:clamp(1rem,1.25vw,1.16rem); line-height:1.2; letter-spacing:-.01em; color:var(--ink)}
+  .route-desc{font-size:.9rem; line-height:1.45; color:var(--muted)}
+  .route-arrow{flex:0 0 auto; align-self:center; color:var(--faint); transition:transform .15s ease, color .15s ease}
+  .route-item:hover .route-title, .route-item:focus-visible .route-title{color:var(--accent)}
+  .route-item:hover .route-arrow, .route-item:focus-visible .route-arrow{transform:translateX(4px); color:var(--accent)}
+  @media (prefers-reduced-motion:reduce){ .route-item,.route-arrow{transition:none} .route-item:hover .route-arrow{transform:none} }
+
   /* ---------- Shor register + circuit ---------- */
   .shor{width:100%; height:auto; display:block}
   .shor-block{fill:color-mix(in srgb, var(--surface-3) 45%, transparent); stroke:var(--line); stroke-width:1.5}

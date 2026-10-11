@@ -49,6 +49,34 @@
   function chip(label, active, attrs) {
     return "<button class='chip" + (active ? " active" : "") + "' type='button' " + (attrs || "") + ">" + label + "</button>";
   }
+
+  /* Shared module cover: 40% editorial introduction + 60% lesson index ("The route"). */
+  function moduleCover(o) {
+    var deks = (o.deks || []).map(function (d) { return "<p class='dek cover-dek'>" + d + "</p>"; }).join("");
+    var route = o.lessons.map(function (l) {
+      return "<li><a class='route-item' href='" + l.href + "'>" +
+        "<span class='route-num'>" + l.num + "</span>" +
+        "<span class='route-body'><span class='route-title'>" + l.title + "</span>" +
+        (l.desc ? "<span class='route-desc'>" + l.desc + "</span>" : "") + "</span>" +
+        "<span class='route-arrow' aria-hidden='true'>&rarr;</span></a></li>";
+    }).join("");
+    return "<div class='container cover-page'>" +
+      backLink(o.backHref || "#/", o.backLabel || "All modules") +
+      "<div class='module-cover'>" +
+        "<section class='cover-intro'>" +
+          "<div style='display:flex;align-items:center;gap:12px'><span style='height:1px;width:40px;background:var(--accent)'></span><span class='eyebrow'>" + o.label + "</span></div>" +
+          "<h1 class='headline cover-title'>" + o.title + "</h1>" +
+          "<p class='sub cover-sub'>" + o.sub + "</p>" + deks +
+          "<div class='cover-cta'><a class='btn primary' href='" + o.ctaHref + "'>" + o.ctaLabel + "</a>" +
+            (o.meta ? "<span class='caption'>" + o.meta + "</span>" : "") + "</div>" +
+          (o.figure ? "<div class='cover-figure'>" + o.figure + "</div>" : "") +
+        "</section>" +
+        "<section class='cover-route' aria-label='Module route'>" +
+          "<div class='route-head'><span class='eyebrow' style='color:var(--faint)'>The route</span><span class='rule' style='flex:1'></span></div>" +
+          "<ol class='route-list'>" + route + "</ol>" +
+        "</section>" +
+      "</div></div>";
+  }
   function rangeSlider(o) {
     var progress = o.max > o.min ? ((o.value - o.min) / (o.max - o.min)) * 100 : 0;
     return "<div class='slider'>" +
@@ -81,6 +109,7 @@
     pageHead: pageHead, backLink: backLink, legendHTML: legendHTML, panel: panel,
     keyIdea: keyIdea, notice: notice, expandable: expandable, eq: eq, m: m,
     stat: stat, fieldRow: fieldRow, transition: transition, chip: chip,
+    moduleCover: moduleCover,
     rangeSlider: rangeSlider, matrixHTML: matrixHTML,
   };
 })(typeof window !== "undefined" ? window : globalThis);
