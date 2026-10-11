@@ -128,10 +128,111 @@
     return { element: host };
   }
 
+  function runNoisy(options) {
+    return load().then(function (mod) {
+      if (!mod.runNoisy) throw new Error("The noisy circuit runner is not loaded.");
+      return mod.runNoisy(options || {});
+    });
+  }
+
+  function pct(x) { return Math.round(100 * (x || 0)) + "%"; }
+
+  /**
+   * Mount a "run the circuit with in-circuit noise" card.
+   *
+   * Used when the backend is not Qollab's noisy simulator: we attach a standard
+   * channel (bit-flip X / phase-flip Z / depolarizing) to every gate at
+   * probability p and compare the ideal and noisy distributions.
+   *
+   * @param {Element} host
+   * @param {object} [opts]
+   * @param {string} [opts.channel='x']
+   * @param {number} [opts.p=0.05]
+   * @param {number} [opts.shots=2048]
+   * @param {function} [opts.onResult] (result, outEl) => void
+   */
+  function mountNoise(host, opts) {
+    if (!host) return null;
+    opts = opts || {};
+    var state = { channel: opts.channel || "x", p: opts.p != null ? opts.p : 0.05 };
+    var CHAN = [["x", "Bit-flip X"], ["z", "Phase-flip Z"], ["depol", "Depolarizing"]];
+
+    host.innerHTML =
+      "<div class='cnoise'>" +
+        "<div class='chip-row' data-ch>" +
+          CHAN.map(function (c) {
+            return "<button class='chip" + (state.channel === c[0] ? " active" : "") + "' type='button' data-chn='" + c[0] + "'>" + c[1] + "</button>";
+          }).join("") +
+        "</div>" +
+        "<div class='slider' style='margin-top:12px'><div class='slider-head'><label for='cn-p'>Noise per gate · p</label>" +
+          "<span class='val' data-pval>" + state.p.toFixed(2) + "</span></div>" +
+          "<input id='cn-p' class='range' type='range' min='0' max='0.2' step='0.01' value='" + state.p + "' data-prange style='--range-progress:" + (100 * state.p / 0.2) + "%'></div>" +
+        "<div class='crun-bar-row' style='margin-top:12px'>" +
+          "<button class='btn primary' data-nrun>Run noisy circuit</button>" +
+          "<span class='caption' data-cn-status></span>" +
+        "</div>" +
+        "<div data-nout></div>" +
+      "</div>";
+
+    var btn = host.querySelector("[data-nrun]");
+    var status = host.querySelector("[data-cn-status]");
+    var out = host.querySelector("[data-nout]");
+    var range = host.querySelector("[data-prange]");
+
+    host.querySelectorAll("[data-chn]").forEach(function (el) {
+      el.addEventListener("click", function () {
+        state.channel = el.getAttribute("data-chn");
+        host.querySelectorAll("[data-chn]").forEach(function (b) {
+          b.classList.toggle("active", b.getAttribute("data-chn") === state.channel);
+        });
+      });
+    });
+    range.addEventListener("input", function () {
+      state.p = Number(range.value);
+      host.querySelector("[data-pval]").textContent = state.p.toFixed(2);
+      range.style.setProperty("--range-progress", (100 * state.p / 0.2) + "%");
+    });
+
+    if (!available()) {
+      btn.disabled = true;
+      status.textContent = "Run inside Qollab to execute this circuit.";
+    }
+
+    btn.addEventListener("click", function () {
+      btn.disabled = true;
+      status.textContent = "Building the noisy circuit…";
+      out.innerHTML = "";
+      runNoisy({ channel: state.channel, p: state.p, shots: opts.shots || 2048 }).then(function (res) {
+        status.textContent = res.shots + " shots · " + res.channel + " @ p = " + res.p;
+        out.innerHTML =
+          "<div class='notice' style='margin-top:12px'><p><b>Protected:</b> " + esc(res.protected) + "</p></div>" +
+          "<div class='grid-two' style='margin-top:12px'>" +
+            "<div><div class='caption'>Noise-free circuit · detected " + pct(res.ideal.detected) + "</div>" + barsHTML(res.ideal.counts, 4) + "</div>" +
+            "<div><div class='caption'>Noisy circuit · detected " + pct(res.noisy.detected) + "</div>" + barsHTML(res.noisy.counts, 4) + "</div>" +
+          "</div>" +
+          (res.citations && res.citations.length
+            ? "<details class='expand' style='margin-top:12px'><summary>Noise models &amp; references</summary><div>" +
+                res.citations.map(function (c) { return "<div class='caption' style='margin-top:4px'>" + esc(c) + "</div>"; }).join("") +
+              "</div></details>"
+            : "");
+        if (opts.onResult) opts.onResult(res, out);
+      }).catch(function (err) {
+        status.textContent = "";
+        out.innerHTML = "<div class='notice'><p>" + esc((err && err.message) || err) + "</p></div>";
+      }).then(function () {
+        btn.disabled = !available();
+      });
+    });
+
+    return { element: host };
+  }
+
   global.CircuitRun = {
     available: available,
     run: run,
+    runNoisy: runNoisy,
     mount: mount,
+    mountNoise: mountNoise,
     barsHTML: barsHTML,
     summaryLine: summaryLine,
   };

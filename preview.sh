@@ -28,7 +28,7 @@ imports = {
 }
 # circuits.js imports these bare Python modules; Qollab resolves them, the
 # static server does not, so point them all at a local stub.
-for model in ("repetition", "shor", "surface", "iceberg"):
+for model in ("noise", "repetition", "shor", "surface", "iceberg"):
     imports["quantum." + model] = "./quantum-stub.js"
 
 inject = (
@@ -51,18 +51,25 @@ export function run(backend, params) {
   const p = typeof params === "string" ? JSON.parse(params) : (params || {});
   const shots = p.shots || 1024;
   const half = Math.round(shots * 0.5);
+  const counts = { "00000": shots - half, "11010": half };
   return JSON.stringify({
     model: "preview",
     title: "Local preview stub",
     qubits: 5,
     shots: shots,
-    counts: { "00000": shots - half, "11010": half },
+    counts: counts,
     summary: {
       detected: 1,
       logical_correct: 1,
       correlated: 1,
       note: "Local preview stub \u2014 not a real Qollab run.",
     },
+    protected: "logical qubit (memory) \u2014 local preview stub",
+    channel: p.channel || "x",
+    p: p.p || 0,
+    ideal: { counts: { "00000": shots }, detected: 0 },
+    noisy: { counts: { "00000": Math.round(shots * 0.3), "00001": Math.round(shots * 0.7) }, detected: 0.7 },
+    citations: ["Local preview stub \u2014 no real noise model."],
   });
 }
 run.callPromising = function (backend, params) {

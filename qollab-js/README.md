@@ -62,6 +62,7 @@ trayectorias y ejes de rotación.
 | `circuits.js` | Puente JS ↔ Python: `runModel(id, opts)` ejecuta un circuito de `quantum/*.py` en el backend. Expone `window.QollabCircuits`. |
 | `circuit-run.js` | Tarjeta compartida *Run on the backend*: botón + histograma de *counts*; importa `circuits.js` de forma perezosa y se desactiva fuera de Qollab. Expone `window.CircuitRun`. |
 | `quantum/*.py` | Circuitos Qiskit reales (`repetition`, `shor`, `surface`, `iceberg`) + `common.py`. |
+| `quantum/noise.py` | Ruido **in-circuit** con Aer: añade un canal estándar (bit-flip X, phase-flip Z o depolarizante) a cada compuerta y compara ideal vs ruidoso. Usado cuando el backend no es el *noisy* de Qollab. |
 
 ## Honestidad sobre la simulación
 
@@ -71,6 +72,13 @@ trayectorias y ejes de rotación.
   Módulo 4) envían el circuito exacto de `quantum/*.py` a un backend y usan los
   *counts* devueltos para leer el síndrome. Fuera de Qollab esos botones quedan
   desactivados.
+- **Ruido in-circuit (Aer).** Cuando el backend no es el *noisy* de Qollab, la
+  lección de Shor construye el circuito exacto, le añade un canal de ruido estándar
+  (bit-flip X, phase-flip Z o depolarizante) a cada compuerta y lo corre en un
+  simulador Aer clásico, comparando las distribuciones ideal y ruidosa y mostrando
+  la corrección del decoder. Modelos: depolarizante (Nielsen & Chuang, 2000); errores
+  X/Z independientes (Dennis, Kitaev, Landahl & Preskill, *J. Math. Phys.* **43**,
+  4452, 2002); código de Shor (*Phys. Rev. A* **52**, R2493, 1995).
 - **El resto de las simulaciones son clásicas, en el navegador.** El Módulo 3 usa
   un **modelo de marco de Pauli**: exacto para errores y correcciones de Pauli,
   pero no un simulador cuántico universal. Supone ruido de *capacidad de código*

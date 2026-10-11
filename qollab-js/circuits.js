@@ -13,6 +13,7 @@
  * `backend` is the pre-created backend Qollab injects into the entry point and
  * every JS file it imports (see the runtime docs).
  */
+import * as noise from 'quantum.noise';
 import * as repetition from 'quantum.repetition';
 import * as shor from 'quantum.shor';
 import * as surface from 'quantum.surface';
@@ -61,5 +62,33 @@ export async function runModel(id, { shots = 1024, errorQubit = null, errorPauli
   return JSON.parse(text);
 }
 
+/**
+ * Run the circuit with in-circuit noise on a local Aer simulator.
+ *
+ * Used only when the selected backend is not Qollab's noisy one: we build the
+ * exact circuit, attach a noise channel (x / z / depol at probability p) to
+ * every gate, and return the ideal and noisy distributions.
+ *
+ * @param {object} options
+ * @param {string} [options.channel='x']  'x' | 'z' | 'depol'
+ * @param {number} [options.p=0]
+ * @param {number} [options.shots=1024]
+ * @returns {Promise<object>} { protected, channel, p, ideal, noisy, citations }
+ */
+export async function runNoisy({ channel = 'x', p = 0, shots = 2048, errorQubit = null, errorPauli = 'X' } = {}) {
+  if (typeof backend === 'undefined') {
+    throw new Error('No backend available: run this project inside Qollab.');
+  }
+  const params = JSON.stringify({ channel, p, shots, errorQubit, errorPauli });
+  const proxy = await noise.run.callPromising(backend, params);
+  let text;
+  try {
+    text = typeof proxy === 'string' ? proxy : proxy.toString();
+  } finally {
+    if (proxy && typeof proxy.destroy === 'function') proxy.destroy();
+  }
+  return JSON.parse(text);
+}
+
 /* Exposed so the shared UI card (circuit-run.js) can call it. */
-window.QollabCircuits = { MODELS, getModel, runModel };
+window.QollabCircuits = { MODELS, getModel, runModel, runNoisy };

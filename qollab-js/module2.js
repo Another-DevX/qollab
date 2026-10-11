@@ -1367,6 +1367,7 @@
         "<section style='margin-top:24px'><div class='panel'><div class='caption'>Logical failure probability vs physical error rate</div><div id='nl-chart' style='margin-top:8px'></div><div class='legend-chart' id='nl-legend'></div></div></section>" +
         "<section id='nl-summary' style='margin-top:24px'></section>" +
         "<section id='nl-circuit' style='margin-top:32px'></section>" +
+        "<section id='nl-noise' style='margin-top:40px'></section>" +
         "<section id='nl-discovery' style='margin-top:48px'></section>" +
         "<section id='nl-quiz' style='margin-top:64px'></section>" +
         "<aside class='transition'><div class='big'>M3</div><div><span class='eyebrow' style='color:var(--faint)'>Next module</span>" +
@@ -1523,7 +1524,28 @@
       });
     }
 
-    update(); updateQuiz(); mountNoiseRun();
+    /* In-circuit noise on a classical Aer simulator, for the exact Shor circuit. */
+    function mountNoiseLab() {
+      var host = $sel("#nl-noise", root);
+      host.innerHTML =
+        "<div class='page-head'><div class='meta'><span class='kick'>On hardware · real noise</span></div>" +
+          "<h2 class='headline' style='font-size:1.6rem'>Run the Shor circuit with in-circuit noise</h2>" +
+          "<p class='dek' style='margin-top:8px'>When the selected backend is not Qollab's noisy simulator, we build the exact nine-qubit encoding and attach a standard noise channel to every gate, then run it on a classical Aer simulator. Compare the noise-free and noisy syndromes, and the decoder's corrected logical failure.</p></div>" +
+        "<div class='panel' style='margin-top:16px' id='nl-noise-host'></div>";
+      CircuitRun.mountNoise($sel("#nl-noise-host", root), {
+        shots: 2048,
+        onResult: function (res, out) {
+          var raw = Noise.exactPL(Noise.CODES.shor, res.channel, res.p, false);
+          var fixed = Noise.exactPL(Noise.CODES.shor, res.channel, res.p, true);
+          out.insertAdjacentHTML("beforeend",
+            "<div class='cmp-row' style='margin-top:12px'><span class='caption'>Logical failure · no correction</span><span class='m'>" + (raw * 100).toFixed(2) + "%</span></div>" +
+            "<div class='cmp-row'><span class='caption'>Logical failure · corrected</span><span class='m'>" + (fixed * 100).toFixed(2) + "%</span></div>" +
+            "<p class='caption' style='margin-top:8px'>The noisy circuit is the raw picture; the decoder turns a raw logical failure of " + (raw * 100).toFixed(2) + "% into " + (fixed * 100).toFixed(2) + "%.</p>");
+        }
+      });
+    }
+
+    update(); updateQuiz(); mountNoiseRun(); mountNoiseLab();
     return null;
   }
 

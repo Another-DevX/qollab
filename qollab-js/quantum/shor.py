@@ -29,8 +29,11 @@ Z_PAIRS = [(0, 1), (1, 2), (3, 4), (4, 5), (6, 7), (7, 8)]
 X_BLOCKS = [range(0, 6), range(3, 9)]
 
 
-def run(backend, params_json="{}"):
-    shots, error_qubit, error_pauli = parse_options(params_json)
+def build(error_qubit=None, error_pauli="X"):
+    """The Shor encoding + one syndrome round, as a circuit.
+
+    Shared by the plain runner and the in-circuit noise runner (`quantum.noise`).
+    """
     qc = QuantumCircuit(QUBITS, 8)
     qc.h(0)  # encode: outer phase-flip code -> the three block leaders in |+>
     qc.h(3)
@@ -55,6 +58,12 @@ def run(backend, params_json="{}"):
         qc.h(ancilla)
 
     qc.measure(list(ANCILLAS), list(range(8)))
+    return qc
+
+
+def run(backend, params_json="{}"):
+    shots, error_qubit, error_pauli = parse_options(params_json)
+    qc = build(error_qubit, error_pauli)
     counts = run_circuit(backend, qc, shots)
     detected = probability(counts, lambda k: "1" in k)
     return response(

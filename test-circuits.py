@@ -65,6 +65,17 @@ def main():
         print("   summary:    " + json.dumps(out.get("summary", {})))
 
     print("\n" + ("all models ran." if not failed else f"{failed} model(s) failed."))
+
+    if not only or "noise" in only:
+        try:
+            from quantum import noise
+            print("\n== in-circuit noise (Aer) · shor")
+            for ch in ("x", "z", "depol"):
+                nz = json.loads(noise.run(None, json.dumps({"channel": ch, "p": 0.05, "shots": args.shots})))
+                print(f"   {ch:<5} ideal detected={nz['ideal']['detected']:.3f}  noisy detected={nz['noisy']['detected']:.3f}")
+        except Exception as exc:  # noqa: BLE001
+            print(f"\n== in-circuit noise: skipped ({exc})")
+
     return 1 if failed else 0
 
 
