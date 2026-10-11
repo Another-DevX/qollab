@@ -60,7 +60,7 @@
         (l.desc ? "<span class='route-desc'>" + l.desc + "</span>" : "") + "</span>" +
         "<span class='route-arrow' aria-hidden='true'>&rarr;</span></a></li>";
     }).join("");
-    return "<div class='container cover-page'>" +
+    return "<div class='cover-page" + (o.bare ? " cover-page--bare" : "") + "'>" +
       backLink(o.backHref || "#/", o.backLabel || "All modules") +
       "<div class='module-cover'>" +
         "<section class='cover-intro'>" +
