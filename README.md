@@ -158,8 +158,6 @@ The shipped platform is a **single vanilla HTML + CSS + JavaScript app** — no 
 - **A three.js sandbox.** `errorslab/` adds a PhET-style "Systematic gate errors" lab with a 3D Bloch sphere (three.js is provided by the Qollab runtime).
 - **Qollab packaging.** The app is laid out as a Qollab **JS project** (`index.html` + `main.js` + `main.css`; `README.md` becomes the project write-up). A separate **Python/Qiskit** circuit set lives in `qollab-js/quantum/` with a JavaScript runner (`circuits.js`).
 
-> **Qollab / IonQ integration (current state).** The project is packaged and ready to run as a Qollab JS project. The Python files in `quantum/` define real circuits (Bell, repetition, phase-flip, Shor, surface, Iceberg) and `circuits.js` can call them through Qollab's `.callPromising` API — **but this runner is not yet wired into the UI**, so it is a next step rather than a shipped feature.
-
 ## Getting Started
 
 ### Run it locally (one command)
